@@ -19,15 +19,16 @@ class CustomerRepository:
         return Database.get_database()["customers"]
     
     @staticmethod
-    async def resolve_company_reference(company_name: Optional[str]) -> Optional[Dict[str, Any]]:
+    async def resolve_company_reference(company_name: Optional[str], validate_status: bool = True) -> Optional[Dict[str, Any]]:
         """
         Resolves a company name to a company reference (id and name).
         
         Args:
             company_name: Company name to search for
+            validate_status: If True, validates that company is linked=True and active=True
             
         Returns:
-            Dict with 'id' (ObjectId) and 'name' if company found, None otherwise
+            Dict with 'id' (ObjectId) and 'name' if company found and valid, None otherwise
         """
         if not company_name or not company_name.strip():
             return None
@@ -35,7 +36,16 @@ class CustomerRepository:
         try:
             company = await CompanyRepository.find_by_name(company_name.strip())
             if company:
-                logger.debug(f"Company found: {company.name} (ID: {company.id})")
+                # Validate status if required
+                if validate_status:
+                    if not company.linked or not company.active:
+                        logger.warning(
+                            f"Company '{company.name}' (ID: {company.id}) is not valid: "
+                            f"linked={company.linked}, active={company.active}"
+                        )
+                        return None
+                
+                logger.debug(f"Company found and valid: {company.name} (ID: {company.id})")
                 # Store ObjectId directly, not as string, so MongoDB queries work
                 return {
                     "id": company.id,  # ObjectId, not string
@@ -57,14 +67,16 @@ class CustomerRepository:
             customer_dict = customer.model_dump()
             
             # Resolve company reference if company name is provided
+            # Validate that company exists, is linked and active
             if customer.company and isinstance(customer.company, str):
-                company_ref = await CustomerRepository.resolve_company_reference(customer.company)
+                company_ref = await CustomerRepository.resolve_company_reference(customer.company, validate_status=True)
                 if company_ref:
                     customer_dict["company"] = company_ref
                     logger.debug(f"Company reference resolved: {company_ref['name']} (ID: {company_ref['id']})")
                 else:
-                    # Keep original string if company not found
-                    logger.debug(f"Company '{customer.company}' not found, keeping as string")
+                    # If company not found or invalid, raise error (validation should happen before create)
+                    logger.warning(f"Company '{customer.company}' not found, is not linked, or is not active")
+                    raise ValueError(f"Company '{customer.company}' not found, is not linked, or is not active. Company must exist in Companies collection with linked=true and active=true")
             
             customer_dict["created_at"] = datetime.utcnow()
             customer_dict["updated_at"] = datetime.utcnow()
@@ -95,12 +107,12 @@ class CustomerRepository:
             if customer.company and isinstance(customer.company, str) and customer.company.strip():
                 company_names.add(customer.company.strip())
         
-        # Batch lookup companies
+        # Batch lookup companies (validate that they are linked and active)
         company_cache = {}
         if company_names:
             logger.debug(f"Resolving {len(company_names)} unique company names...")
             for company_name in company_names:
-                company_ref = await CustomerRepository.resolve_company_reference(company_name)
+                company_ref = await CustomerRepository.resolve_company_reference(company_name, validate_status=True)
                 if company_ref:
                     company_cache[company_name] = company_ref
         
@@ -109,12 +121,17 @@ class CustomerRepository:
             customer_dict = customer.model_dump()
             
             # Resolve company reference if company name is provided
+            # Validate that company exists, is linked and active
             if customer.company and isinstance(customer.company, str):
                 company_name = customer.company.strip()
                 if company_name in company_cache:
                     customer_dict["company"] = company_cache[company_name]
                     logger.debug(f"Company reference resolved: {company_cache[company_name]['name']} (ID: {company_cache[company_name]['id']})")
-                # If not in cache, keep original string (company not found)
+                else:
+                    # If company not found or invalid, skip this customer
+                    # This should have been validated in CSV processing, but double-check here
+                    logger.warning(f"Company '{company_name}' not found, is not linked, or is not active. Skipping customer '{customer.name}'.")
+                    continue  # Skip this customer
             
             customer_dict["created_at"] = now
             customer_dict["updated_at"] = now
@@ -194,6 +211,31 @@ class CustomerRepository:
         return [Customer(**c) for c in customers]
     
     @staticmethod
+    async def list_by_company(company_id: ObjectId, active: Optional[bool] = None, skip: int = 0, limit: int = 100) -> List[Customer]:
+        """
+        Lists customers by company ID.
+        
+        Args:
+            company_id: Company ObjectId
+            active: Optional filter for active status (True/False)
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            
+        Returns:
+            List of Customer objects
+        """
+        collection = CustomerRepository.get_collection()
+        
+        filter_dict = {"company.id": company_id}
+        if active is not None:
+            filter_dict["active"] = active
+        
+        cursor = collection.find(filter_dict).skip(skip).limit(limit)
+        customers = await cursor.to_list(length=None)
+        
+        return [Customer(**c) for c in customers]
+    
+    @staticmethod
     async def update(customer_id: str, customer_update: CustomerUpdate) -> Optional[Customer]:
         """Updates a customer."""
         collection = CustomerRepository.get_collection()
@@ -201,12 +243,16 @@ class CustomerRepository:
         update_dict = customer_update.model_dump(exclude_unset=True)
         
         # Resolve company reference if company name is provided
+        # Validate that company exists, is linked and active
         if "company" in update_dict and update_dict["company"] and isinstance(update_dict["company"], str):
-            company_ref = await CustomerRepository.resolve_company_reference(update_dict["company"])
+            company_ref = await CustomerRepository.resolve_company_reference(update_dict["company"], validate_status=True)
             if company_ref:
                 update_dict["company"] = company_ref
                 logger.debug(f"Company reference resolved: {company_ref['name']} (ID: {company_ref['id']})")
-            # If company not found, keep original string
+            else:
+                # If company not found or invalid, clear the reference
+                logger.warning(f"Company '{update_dict['company']}' not found, is not linked, or is not active. Clearing company reference.")
+                update_dict["company"] = None
         
         if update_dict:
             update_dict["updated_at"] = datetime.utcnow()
@@ -226,6 +272,85 @@ class CustomerRepository:
         customers = await cursor.to_list(length=None)
         
         return [Customer(**c) for c in customers]
+    
+    @staticmethod
+    async def delete(customer_id: str) -> bool:
+        """Deletes a customer."""
+        collection = CustomerRepository.get_collection()
+        
+        result = await collection.delete_one({"_id": ObjectId(customer_id)})
+        return result.deleted_count > 0
+    
+    @staticmethod
+    async def update_company_name(company_id: ObjectId, new_name: str) -> int:
+        """
+        Updates the company name in all customers that reference this company.
+        
+        Args:
+            company_id: Company ObjectId
+            new_name: New company name
+            
+        Returns:
+            Number of customers updated
+        """
+        collection = CustomerRepository.get_collection()
+        
+        try:
+            # Update company name in all customers with this company reference
+            # Company reference is stored as dict with id field: {"id": ObjectId, "name": str}
+            result = await collection.update_many(
+                {"company.id": company_id},
+                {
+                    "$set": {
+                        "company.name": new_name,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                logger.info(f"Updated company name to '{new_name}' in {result.modified_count} customer(s) for company ID: {company_id}")
+            
+            return result.modified_count
+        except Exception as e:
+            logger.error(f"Error updating company name: {type(e).__name__}: {e}")
+            logger.error(f"Error details:", exc_info=True)
+            raise
+    
+    @staticmethod
+    async def clear_company_reference(company_id: ObjectId) -> int:
+        """
+        Clears company reference from all customers that reference this company.
+        
+        Args:
+            company_id: Company ObjectId to clear references for
+            
+        Returns:
+            Number of customers updated
+        """
+        collection = CustomerRepository.get_collection()
+        
+        try:
+            # Find all customers with this company reference
+            # Company reference is stored as dict with id field: {"id": ObjectId, "name": str}
+            result = await collection.update_many(
+                {"company.id": company_id},
+                {
+                    "$set": {
+                        "company": None,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                logger.info(f"Cleared company reference from {result.modified_count} customer(s) for company ID: {company_id}")
+            
+            return result.modified_count
+        except Exception as e:
+            logger.error(f"Error clearing company reference: {type(e).__name__}: {e}")
+            logger.error(f"Error details:", exc_info=True)
+            raise
     
     @staticmethod
     async def count(filter_dict: dict = None) -> int:
