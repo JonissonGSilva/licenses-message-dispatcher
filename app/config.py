@@ -2,6 +2,7 @@
 from pydantic_settings import BaseSettings
 from pathlib import Path
 from typing import Optional
+import os
 
 
 # Caminho para o arquivo .env na raiz do projeto
@@ -24,8 +25,19 @@ class Settings(BaseSettings):
     
     # Aplicação
     api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    api_port: int = 8000  # Será sobrescrito por PORT se disponível (Render, Heroku, etc)
     environment: str = "development"
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Render, Heroku e outros serviços cloud fornecem PORT via variável de ambiente
+        # Prioriza PORT sobre api_port se disponível
+        port_from_env = os.getenv("PORT")
+        if port_from_env:
+            try:
+                self.api_port = int(port_from_env)
+            except ValueError:
+                pass  # Mantém o valor padrão se PORT não for um número válido
     
     class Config:
         env_file = str(ENV_FILE)

@@ -1,5 +1,5 @@
 """Repository for Company operations."""
-from typing import List, Optional
+from typing import Dict, List, Optional
 from bson import ObjectId
 from datetime import datetime
 from app.database import Database
