@@ -84,6 +84,20 @@ class CustomerUpdate(BaseModel):
     active: Optional[bool] = None
 
 
+class AssociateCompanyRequest(BaseModel):
+    """Schema for associating a company to a customer."""
+    company_id: Optional[str] = Field(None, description="Company ID (ObjectId as string)")
+    company_name: Optional[str] = Field(None, max_length=200, description="Company name")
+    
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "company_id": "6920a1c5cd2bf3399bbd3836"
+            }
+        }
+    }
+
+
 class Customer(CustomerBase):
     """Complete Customer schema."""
     id: PyObjectId = Field(default_factory=lambda: PyObjectId(), alias="_id")
