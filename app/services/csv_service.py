@@ -5,6 +5,7 @@ from typing import List, Dict, Optional, Any
 from io import BytesIO
 from app.models.customer import CustomerCreate
 from app.models.csv_validation import InvalidRowDetail, CSVValidationResult
+from app.repositories.customer_repository import CustomerRepository
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +169,16 @@ class CSVService:
                         row_errors.append(error_msg)
                         logger.warning(f"Row {row_number}: {error_msg}")
                     
+                    # Validates company if provided (must exist, be linked and active)
+                    company_name = str(row.get("company", "")).strip() if pd.notna(row.get("company")) else None
+                    if company_name:
+                        # Validate that company exists and is linked/active
+                        company_ref = await CustomerRepository.resolve_company_reference(company_name, validate_status=True)
+                        if not company_ref:
+                            error_msg = f"Company '{company_name}' not found, is not linked, or is not active. Company must exist in Companies collection with linked=true and active=true"
+                            row_errors.append(error_msg)
+                            logger.warning(f"Row {row_number}: {error_msg}")
+                    
                     # If there are errors, add to invalid rows and continue
                     if row_errors:
                         invalid_rows_details.append(InvalidRowDetail(
@@ -184,7 +195,7 @@ class CSVService:
                         email=str(row.get("email", "")).strip() if pd.notna(row.get("email")) else None,
                         phone=phone,
                         license_type=license_type,
-                        company=str(row.get("company", "")).strip() if pd.notna(row.get("company")) else None,
+                        company=company_name,
                         active=True
                     )
                     
