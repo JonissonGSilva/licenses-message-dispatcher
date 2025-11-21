@@ -1,5 +1,5 @@
 """Customer model."""
-from typing import Optional, Annotated
+from typing import Optional, Annotated, Union, Any
 from datetime import datetime
 from pydantic import BaseModel, Field, EmailStr, BeforeValidator, GetCoreSchemaHandler
 from pydantic_core import core_schema
@@ -41,13 +41,31 @@ class PyObjectId(ObjectId):
         ])
 
 
+class CompanyReference(BaseModel):
+    """Reference to a Company with ID and name."""
+    id: PyObjectId = Field(..., description="Company ID (ObjectId)")
+    name: str = Field(..., description="Company name")
+    
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str},
+        "json_schema_extra": {
+            "example": {
+                "id": "507f1f77bcf86cd799439011",
+                "name": "TechSolutions Ltda"
+            }
+        }
+    }
+
+
 class CustomerBase(BaseModel):
     """Base Customer schema."""
     name: str = Field(..., min_length=1, max_length=200, description="Customer full name")
     email: Optional[EmailStr] = Field(None, description="Customer email")
     phone: str = Field(..., min_length=10, max_length=20, description="Phone with area code and country code")
     license_type: str = Field(..., pattern="^(Start|Hub)$", description="License type: Start or Hub")
-    company: Optional[str] = Field(None, max_length=200, description="Company name")
+    company: Optional[Union[str, CompanyReference, dict]] = Field(None, description="Company name (string) or Company reference (object with id and name)")
     active: bool = Field(default=True, description="Indicates if the customer is active")
 
 
@@ -89,6 +107,40 @@ class Customer(CustomerBase):
     }
 
 
+def normalize_company_field(company_value: Any) -> Optional[Union[str, dict]]:
+    """
+    Normalizes company field to be either string or dict with string id.
+    
+    Args:
+        company_value: Company value (can be str, dict, CompanyReference, or None)
+        
+    Returns:
+        Normalized company value (str or dict with string id)
+    """
+    if company_value is None:
+        return None
+    
+    if isinstance(company_value, str):
+        return company_value
+    
+    if isinstance(company_value, dict):
+        # Convert ObjectId to string if present
+        result = company_value.copy()
+        if "id" in result:
+            result["id"] = str(result["id"])
+        return result
+    
+    # If it's a CompanyReference or other Pydantic model, convert to dict
+    if hasattr(company_value, "model_dump"):
+        result = company_value.model_dump()
+        if "id" in result:
+            result["id"] = str(result["id"])
+        return result
+    
+    # Fallback: convert to string
+    return str(company_value)
+
+
 class CustomerResponse(BaseModel):
     """Customer response schema."""
     id: str
@@ -96,11 +148,30 @@ class CustomerResponse(BaseModel):
     email: Optional[str]
     phone: str
     license_type: str
-    company: Optional[str]
+    company: Optional[Union[str, dict]] = Field(None, description="Company name (string) or Company reference (object with id as string and name)")
     active: bool
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True,
+        "json_encoders": {ObjectId: str},
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True
+    }
+    
+    @classmethod
+    def from_customer(cls, customer: "Customer") -> "CustomerResponse":
+        """Creates CustomerResponse from Customer, normalizing company field."""
+        return cls(
+            id=str(customer.id),
+            name=customer.name,
+            email=customer.email,
+            phone=customer.phone,
+            license_type=customer.license_type,
+            company=normalize_company_field(customer.company),
+            active=customer.active,
+            created_at=customer.created_at,
+            updated_at=customer.updated_at
+        )
 
