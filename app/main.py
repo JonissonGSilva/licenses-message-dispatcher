@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from app.database import Database
 from app.routers import customers, licenses, messages, webhooks, csv, companies
 from app.config import settings
+from app.services.startup_console import StartupConsole
 
 # Logging configuration
 logging.basicConfig(
@@ -29,6 +30,13 @@ async def lifespan(app: FastAPI):
     logger.info("Starting application...")
     await Database.connect()
     logger.info("Application started successfully")
+    
+    # Exibe console de inicialização
+    try:
+        await StartupConsole.display_startup_info()
+    except Exception as e:
+        logger.warning(f"Erro ao exibir console de inicialização: {e}")
+        # Não falha o startup se o console tiver problemas
     
     yield
     
