@@ -1,9 +1,10 @@
 """Repository for Customer operations."""
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from bson import ObjectId
 from datetime import datetime
 from app.database import Database
 from app.models.customer import Customer, CustomerCreate, CustomerUpdate
+from app.repositories.company_repository import CompanyRepository
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,12 +19,53 @@ class CustomerRepository:
         return Database.get_database()["customers"]
     
     @staticmethod
+    async def resolve_company_reference(company_name: Optional[str]) -> Optional[Dict[str, Any]]:
+        """
+        Resolves a company name to a company reference (id and name).
+        
+        Args:
+            company_name: Company name to search for
+            
+        Returns:
+            Dict with 'id' (ObjectId) and 'name' if company found, None otherwise
+        """
+        if not company_name or not company_name.strip():
+            return None
+        
+        try:
+            company = await CompanyRepository.find_by_name(company_name.strip())
+            if company:
+                logger.debug(f"Company found: {company.name} (ID: {company.id})")
+                # Store ObjectId directly, not as string, so MongoDB queries work
+                return {
+                    "id": company.id,  # ObjectId, not string
+                    "name": company.name
+                }
+            else:
+                logger.debug(f"Company not found: {company_name}")
+                return None
+        except Exception as e:
+            logger.warning(f"Error resolving company reference for '{company_name}': {type(e).__name__}: {e}")
+            return None
+    
+    @staticmethod
     async def create(customer: CustomerCreate) -> Customer:
         """Creates a new customer."""
         collection = CustomerRepository.get_collection()
         
         try:
             customer_dict = customer.model_dump()
+            
+            # Resolve company reference if company name is provided
+            if customer.company and isinstance(customer.company, str):
+                company_ref = await CustomerRepository.resolve_company_reference(customer.company)
+                if company_ref:
+                    customer_dict["company"] = company_ref
+                    logger.debug(f"Company reference resolved: {company_ref['name']} (ID: {company_ref['id']})")
+                else:
+                    # Keep original string if company not found
+                    logger.debug(f"Company '{customer.company}' not found, keeping as string")
+            
             customer_dict["created_at"] = datetime.utcnow()
             customer_dict["updated_at"] = datetime.utcnow()
             
@@ -47,8 +89,33 @@ class CustomerRepository:
         customers_dict = []
         now = datetime.utcnow()
         
+        # Resolve all company references first (batch processing for better performance)
+        company_names = set()
+        for customer in customers:
+            if customer.company and isinstance(customer.company, str) and customer.company.strip():
+                company_names.add(customer.company.strip())
+        
+        # Batch lookup companies
+        company_cache = {}
+        if company_names:
+            logger.debug(f"Resolving {len(company_names)} unique company names...")
+            for company_name in company_names:
+                company_ref = await CustomerRepository.resolve_company_reference(company_name)
+                if company_ref:
+                    company_cache[company_name] = company_ref
+        
+        # Process customers with resolved company references
         for customer in customers:
             customer_dict = customer.model_dump()
+            
+            # Resolve company reference if company name is provided
+            if customer.company and isinstance(customer.company, str):
+                company_name = customer.company.strip()
+                if company_name in company_cache:
+                    customer_dict["company"] = company_cache[company_name]
+                    logger.debug(f"Company reference resolved: {company_cache[company_name]['name']} (ID: {company_cache[company_name]['id']})")
+                # If not in cache, keep original string (company not found)
+            
             customer_dict["created_at"] = now
             customer_dict["updated_at"] = now
             customers_dict.append(customer_dict)
@@ -132,6 +199,15 @@ class CustomerRepository:
         collection = CustomerRepository.get_collection()
         
         update_dict = customer_update.model_dump(exclude_unset=True)
+        
+        # Resolve company reference if company name is provided
+        if "company" in update_dict and update_dict["company"] and isinstance(update_dict["company"], str):
+            company_ref = await CustomerRepository.resolve_company_reference(update_dict["company"])
+            if company_ref:
+                update_dict["company"] = company_ref
+                logger.debug(f"Company reference resolved: {company_ref['name']} (ID: {company_ref['id']})")
+            # If company not found, keep original string
+        
         if update_dict:
             update_dict["updated_at"] = datetime.utcnow()
             await collection.update_one(
