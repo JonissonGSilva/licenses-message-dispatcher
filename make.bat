@@ -19,6 +19,7 @@ if "%1"=="test-cov" goto test-cov
 if "%1"=="clean" goto clean
 if "%1"=="check-env" goto check-env
 if "%1"=="verify-env" goto verify-env
+if "%1"=="create-indexes" goto create-indexes
 goto help
 
 :help
@@ -30,9 +31,10 @@ echo   run        - Executa o projeto (FastAPI)
 echo   test       - Executa os testes
 echo   test-cov   - Executa os testes com cobertura
 echo   clean      - Limpa arquivos temporarios
-echo   check-env  - Verifica se o arquivo .env esta configurado
-echo   verify-env - Verifica configuracoes do .env (requer Python)
-echo   help       - Mostra esta mensagem
+echo   check-env      - Verifica se o arquivo .env esta configurado
+echo   verify-env     - Verifica configuracoes do .env (requer Python)
+echo   create-indexes - Cria indices no MongoDB para melhorar performance
+echo   help           - Mostra esta mensagem
 echo.
 goto end
 
@@ -126,6 +128,16 @@ if not exist "%VENV%" (
 )
 call %VENV_ACTIVATE%
 python scripts\check_env.py
+goto end
+
+:create-indexes
+echo Criando indices no MongoDB...
+if not exist "%VENV%" (
+    echo Ambiente virtual nao encontrado. Execute 'make.bat setup' primeiro.
+    exit /b 1
+)
+call %VENV_ACTIVATE%
+python scripts\create_indexes.py
 goto end
 
 :end

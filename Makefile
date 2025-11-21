@@ -1,4 +1,4 @@
-.PHONY: help install setup run test test-cov clean lint format docker-up docker-down
+.PHONY: help install setup run test test-cov clean lint format docker-up docker-down create-indexes
 
 # Variáveis
 PYTHON := python
@@ -148,6 +148,14 @@ verify-env: ## Verifica configurações do .env (requer Python)
 		exit 1; \
 	fi
 	@. $(VENV_ACTIVATE) && python scripts/check_env.py
+
+create-indexes: ## Cria índices no MongoDB para melhorar performance
+	@echo "$(GREEN)Criando índices no MongoDB...$(NC)"
+	@if [ ! -d "$(VENV)" ]; then \
+		echo "$(YELLOW)Ambiente virtual não encontrado. Execute 'make setup' primeiro.$(NC)"; \
+		exit 1; \
+	fi
+	@. $(VENV_ACTIVATE) && python scripts/create_indexes.py
 
 dev: setup check-env run ## Setup completo + executa o projeto (atalho)
 
