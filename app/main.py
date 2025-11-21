@@ -17,10 +17,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Reduz logs verbosos do pymongo (topology, connection, etc)
+logging.getLogger("pymongo").setLevel(logging.WARNING)
+logging.getLogger("motor").setLevel(logging.WARNING)
+
 # Sets logging level by environment
 if settings.environment == "development":
     logging.getLogger().setLevel(logging.DEBUG)
     logger.debug("Development mode enabled - detailed logs enabled")
+    # Mantém pymongo em WARNING mesmo em desenvolvimento para evitar sobrecarga
+    logging.getLogger("pymongo").setLevel(logging.WARNING)
+    logging.getLogger("motor").setLevel(logging.WARNING)
 
 
 @asynccontextmanager
