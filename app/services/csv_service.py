@@ -100,6 +100,19 @@ class CSVService:
             df = cls.normalize_columns(df)
             logger.debug(f"Columns after normalization: {list(df.columns)}")
             
+            # Validates that this is NOT a company CSV
+            company_specific_columns = ["cnpj", "employee_count", "contract_expiration", "license_timeout", "portal_id", "linked"]
+            found_company_columns = [col for col in company_specific_columns if col in df.columns]
+            
+            if found_company_columns:
+                logger.error(f"CSV appears to be a Company CSV (found company-specific columns: {found_company_columns})")
+                logger.error(f"Available columns in CSV: {list(df.columns)}")
+                raise ValueError(
+                    f"This CSV appears to be for Companies, not Customers. "
+                    f"Found company-specific columns: {', '.join(found_company_columns)}. "
+                    f"Please use the /api/csv/companies/upload endpoint instead."
+                )
+            
             # Validates required columns
             required_columns = ["name", "phone", "license_type"]
             missing_columns = [col for col in required_columns if col not in df.columns]

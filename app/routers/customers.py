@@ -16,17 +16,7 @@ async def create_customer(customer: CustomerCreate):
     """Creates a new customer."""
     try:
         customer_created = await CustomerRepository.create(customer)
-        return CustomerResponse(
-            id=str(customer_created.id),
-            name=customer_created.name,
-            email=customer_created.email,
-            phone=customer_created.phone,
-            license_type=customer_created.license_type,
-            company=customer_created.company,
-            active=customer_created.active,
-            created_at=customer_created.created_at,
-            updated_at=customer_created.updated_at
-        )
+        return CustomerResponse.from_customer(customer_created)
     except Exception as e:
         logger.error(f"Error creating customer: {type(e).__name__}: {e}")
         logger.error(f"Error details:", exc_info=True)
@@ -47,20 +37,7 @@ async def list_customers(
         else:
             customers = await CustomerRepository.list_all(skip=skip, limit=limit)
         
-        return [
-            CustomerResponse(
-                id=str(c.id),
-                name=c.name,
-                email=c.email,
-                phone=c.phone,
-                license_type=c.license_type,
-                company=c.company,
-                active=c.active,
-                created_at=c.created_at,
-                updated_at=c.updated_at
-            )
-            for c in customers
-        ]
+        return [CustomerResponse.from_customer(c) for c in customers]
     except Exception as e:
         logger.error(f"Error listing customers: {type(e).__name__}: {e}")
         logger.error(f"Error details:", exc_info=True)
@@ -75,17 +52,7 @@ async def get_customer(customer_id: str):
         if not customer:
             raise HTTPException(status_code=404, detail="Customer not found")
         
-        return CustomerResponse(
-            id=str(customer.id),
-            name=customer.name,
-            email=customer.email,
-            phone=customer.phone,
-            license_type=customer.license_type,
-            company=customer.company,
-            active=customer.active,
-            created_at=customer.created_at,
-            updated_at=customer.updated_at
-        )
+        return CustomerResponse.from_customer(customer)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid ID")
     except HTTPException:
@@ -104,17 +71,7 @@ async def update_customer(customer_id: str, customer_update: CustomerUpdate):
         if not customer:
             raise HTTPException(status_code=404, detail="Customer not found")
         
-        return CustomerResponse(
-            id=str(customer.id),
-            name=customer.name,
-            email=customer.email,
-            phone=customer.phone,
-            license_type=customer.license_type,
-            company=customer.company,
-            active=customer.active,
-            created_at=customer.created_at,
-            updated_at=customer.updated_at
-        )
+        return CustomerResponse.from_customer(customer)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid ID")
     except HTTPException:
