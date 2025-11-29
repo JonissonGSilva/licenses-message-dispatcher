@@ -4,8 +4,8 @@ from typing import List, Optional, Dict, Any
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.customer_repository import CustomerRepository
 from app.repositories.company_history_repository import CompanyHistoryRepository
-from app.models.company import CompanyResponse, CompanyCreate, CompanyUpdate
-from app.models.company_history import CompanyHistoryCreate, CompanyHistoryResponse, CompanyPaginatedResponse
+from app.models.company import CompanyResponse, CompanyCreate, CompanyUpdate, CompanyPaginatedResponse
+from app.models.company_history import CompanyHistoryCreate, CompanyHistoryResponse
 from app.models.customer import CustomerResponse
 from bson.errors import InvalidId
 from bson import ObjectId
@@ -107,6 +107,7 @@ async def list_companies(
                     zip_code=c.zip_code,
                     linked=c.linked,
                     active=c.active,
+                    status=c.status,
                     contract_expiration=c.contract_expiration,
                     employee_count=c.employee_count,
                     license_type=c.license_type,
@@ -148,6 +149,7 @@ async def get_company(company_id: str):
             zip_code=company.zip_code,
             linked=company.linked,
             active=company.active,
+            status=company.status,
             contract_expiration=company.contract_expiration,
             employee_count=company.employee_count,
             license_type=company.license_type,
@@ -283,6 +285,7 @@ async def update_company(company_id: str, company_update: CompanyUpdate):
             zip_code=company.zip_code,
             linked=company.linked,
             active=company.active,
+            status=company.status,
             contract_expiration=company.contract_expiration,
             employee_count=company.employee_count,
             license_type=company.license_type,
