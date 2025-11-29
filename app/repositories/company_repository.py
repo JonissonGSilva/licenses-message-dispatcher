@@ -5,6 +5,7 @@ from datetime import datetime
 from app.database import Database
 from app.models.company import Company, CompanyCreate, CompanyUpdate
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +19,54 @@ class CompanyRepository:
         return Database.get_database()["companies"]
     
     @staticmethod
+    def normalize_cnpj(cnpj: str) -> str:
+        """
+        Normalizes CNPJ by removing formatting (dots, slashes, hyphens).
+        
+        Args:
+            cnpj: CNPJ string (can be formatted or not)
+            
+        Returns:
+            CNPJ with only digits (14 characters)
+        """
+        if not cnpj:
+            return cnpj
+        # Remove all non-numeric characters
+        return re.sub(r'\D', '', str(cnpj))
+    
+    @staticmethod
+    def normalize_company_dict(company_dict: dict) -> dict:
+        """
+        Normalizes company dictionary from database before creating Company model.
+        Removes formatting from CNPJ if present.
+        
+        Args:
+            company_dict: Company dictionary from MongoDB
+            
+        Returns:
+            Normalized company dictionary
+        """
+        if not company_dict:
+            return company_dict
+        
+        normalized = company_dict.copy()
+        
+        # Normalize CNPJ if present
+        if "cnpj" in normalized and normalized["cnpj"]:
+            normalized["cnpj"] = CompanyRepository.normalize_cnpj(normalized["cnpj"])
+        
+        return normalized
+    
+    @staticmethod
     async def create(company: CompanyCreate) -> Company:
         """Creates a new company."""
         collection = CompanyRepository.get_collection()
         
         try:
             company_dict = company.model_dump()
+            # Normalize CNPJ before saving
+            if "cnpj" in company_dict and company_dict["cnpj"]:
+                company_dict["cnpj"] = CompanyRepository.normalize_cnpj(company_dict["cnpj"])
             company_dict["created_at"] = datetime.utcnow()
             company_dict["updated_at"] = datetime.utcnow()
             
@@ -49,6 +92,9 @@ class CompanyRepository:
         
         for company in companies:
             company_dict = company.model_dump()
+            # Normalize CNPJ before saving
+            if "cnpj" in company_dict and company_dict["cnpj"]:
+                company_dict["cnpj"] = CompanyRepository.normalize_cnpj(company_dict["cnpj"])
             company_dict["created_at"] = now
             company_dict["updated_at"] = now
             companies_dict.append(company_dict)
@@ -92,15 +138,28 @@ class CompanyRepository:
         collection = CompanyRepository.get_collection()
         
         company = await collection.find_one({"_id": ObjectId(company_id)})
-        return Company(**company) if company else None
+        if company:
+            company = CompanyRepository.normalize_company_dict(company)
+            return Company(**company)
+        return None
     
     @staticmethod
     async def find_by_cnpj(cnpj: str) -> Optional[Company]:
         """Finds a company by CNPJ."""
         collection = CompanyRepository.get_collection()
         
-        company = await collection.find_one({"cnpj": cnpj})
-        return Company(**company) if company else None
+        # Normalize CNPJ for search (try both formatted and unformatted)
+        normalized_cnpj = CompanyRepository.normalize_cnpj(cnpj)
+        company = await collection.find_one({
+            "$or": [
+                {"cnpj": cnpj},  # Original format
+                {"cnpj": normalized_cnpj}  # Normalized format
+            ]
+        })
+        if company:
+            company = CompanyRepository.normalize_company_dict(company)
+            return Company(**company)
+        return None
     
     @staticmethod
     async def find_by_name(name: str) -> Optional[Company]:
@@ -108,7 +167,10 @@ class CompanyRepository:
         collection = CompanyRepository.get_collection()
         
         company = await collection.find_one({"name": name})
-        return Company(**company) if company else None
+        if company:
+            company = CompanyRepository.normalize_company_dict(company)
+            return Company(**company)
+        return None
     
     @staticmethod
     async def find_by_portal_id(portal_id: str) -> Optional[Company]:
@@ -116,7 +178,10 @@ class CompanyRepository:
         collection = CompanyRepository.get_collection()
         
         company = await collection.find_one({"portal_id": portal_id})
-        return Company(**company) if company else None
+        if company:
+            company = CompanyRepository.normalize_company_dict(company)
+            return Company(**company)
+        return None
     
     @staticmethod
     async def list_all(skip: int = 0, limit: int = 100) -> List[Company]:
@@ -126,7 +191,7 @@ class CompanyRepository:
         cursor = collection.find().skip(skip).limit(limit)
         companies = await cursor.to_list(length=None)
         
-        return [Company(**c) for c in companies]
+        return [Company(**CompanyRepository.normalize_company_dict(c)) for c in companies]
     
     @staticmethod
     async def list_by_filter(
@@ -150,7 +215,7 @@ class CompanyRepository:
         cursor = collection.find(filter_dict).skip(skip).limit(limit)
         companies = await cursor.to_list(length=None)
         
-        return [Company(**c) for c in companies]
+        return [Company(**CompanyRepository.normalize_company_dict(c)) for c in companies]
     
     @staticmethod
     async def update(company_id: str, company_update: CompanyUpdate) -> Optional[Company]:
@@ -159,6 +224,9 @@ class CompanyRepository:
         
         update_dict = company_update.model_dump(exclude_unset=True)
         if update_dict:
+            # Normalize CNPJ if being updated
+            if "cnpj" in update_dict and update_dict["cnpj"]:
+                update_dict["cnpj"] = CompanyRepository.normalize_cnpj(update_dict["cnpj"])
             update_dict["updated_at"] = datetime.utcnow()
             await collection.update_one(
                 {"_id": ObjectId(company_id)},
@@ -318,6 +386,7 @@ class CompanyRepository:
             cursor = collection.find({"cnpj": {"$in": cnpjs}})
             existing_by_cnpj = await cursor.to_list(length=None)
             for existing in existing_by_cnpj:
+                existing = CompanyRepository.normalize_company_dict(existing)
                 company = Company(**existing)
                 duplicates[company.cnpj] = company
                 logger.debug(f"Duplicate found by CNPJ: {company.cnpj} (ID: {company.id})")
@@ -327,6 +396,7 @@ class CompanyRepository:
             cursor = collection.find({"name": {"$in": names}})
             existing_by_name = await cursor.to_list(length=None)
             for existing in existing_by_name:
+                existing = CompanyRepository.normalize_company_dict(existing)
                 company = Company(**existing)
                 # Only add if not already found by CNPJ
                 if company.cnpj not in duplicates:
@@ -338,6 +408,7 @@ class CompanyRepository:
             cursor = collection.find({"portal_id": {"$in": portal_ids}})
             existing_by_portal = await cursor.to_list(length=None)
             for existing in existing_by_portal:
+                existing = CompanyRepository.normalize_company_dict(existing)
                 company = Company(**existing)
                 # Only add if not already found by CNPJ or name
                 if company.cnpj not in duplicates and company.name not in duplicates:

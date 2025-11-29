@@ -71,6 +71,25 @@ class CompanyCSVService:
         return phone
     
     @classmethod
+    def validate_cnpj(cls, cnpj: str) -> Optional[str]:
+        """Validates and normalizes CNPJ by removing formatting."""
+        if pd.isna(cnpj):
+            return None
+        
+        cnpj = str(cnpj).strip()
+        if not cnpj:
+            return None
+        
+        # Remove all non-numeric characters
+        cnpj_clean = ''.join(filter(str.isdigit, cnpj))
+        
+        # CNPJ must have exactly 14 digits
+        if len(cnpj_clean) != 14:
+            return None
+        
+        return cnpj_clean
+    
+    @classmethod
     def validate_license_type(cls, license_type: str) -> Optional[str]:
         """Validates and normalizes license type."""
         if pd.isna(license_type):
@@ -229,6 +248,16 @@ class CompanyCSVService:
                         row_errors.append(error_msg)
                         logger.warning(f"Row {row_number}: {error_msg}")
                     
+                    # Validates and normalizes CNPJ (optional but recommended)
+                    cnpj = None
+                    cnpj_raw = row.get("cnpj")
+                    if pd.notna(cnpj_raw):
+                        cnpj = cls.validate_cnpj(cnpj_raw)
+                        if not cnpj:
+                            error_msg = f"Invalid CNPJ format (value: '{cnpj_raw}', must be 14 digits)"
+                            row_errors.append(error_msg)
+                            logger.warning(f"Row {row_number}: {error_msg}")
+                    
                     # Validates and normalizes phone (optional)
                     phone = None
                     phone_raw = row.get("phone")
@@ -280,7 +309,7 @@ class CompanyCSVService:
                     # Creates CompanyCreate object
                     company = CompanyCreate(
                         name=name,
-                        cnpj=str(row.get("cnpj", "")).strip() if pd.notna(row.get("cnpj")) else None,
+                        cnpj=cnpj,
                         email=str(row.get("email", "")).strip() if pd.notna(row.get("email")) else None,
                         phone=phone,
                         address=str(row.get("address", "")).strip() if pd.notna(row.get("address")) else None,
