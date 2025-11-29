@@ -5,7 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from app.database import Database
-from app.routers import customers, licenses, messages, webhooks, csv, companies
+from app.routers import customers, licenses, messages, webhooks, csv, companies, teams
 from app.config import settings
 from app.services.startup_console import StartupConsole
 
@@ -76,6 +76,7 @@ app.include_router(messages.router)
 app.include_router(webhooks.router)
 app.include_router(csv.router)
 app.include_router(companies.router)
+app.include_router(teams.router)
 
 
 @app.get("/")
