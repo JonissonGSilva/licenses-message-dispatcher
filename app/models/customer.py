@@ -1,9 +1,10 @@
 """Customer model."""
 from typing import Optional, Annotated, Union, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, EmailStr, BeforeValidator, GetCoreSchemaHandler
+from pydantic import BaseModel, Field, EmailStr, BeforeValidator, GetCoreSchemaHandler, field_validator
 from pydantic_core import core_schema
 from bson import ObjectId
+import re
 
 
 class PyObjectId(ObjectId):
@@ -67,6 +68,31 @@ class CustomerBase(BaseModel):
     license_type: str = Field(..., pattern="^(Start|Hub)$", description="License type: Start or Hub")
     company: Optional[Union[str, CompanyReference, dict]] = Field(None, description="Company name (string) or Company reference (object with id and name)")
     active: bool = Field(default=True, description="Indicates if the customer is active")
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        """Validates customer name: minimum 2 words, each word with minimum 2 characters, no numbers."""
+        if not v or not v.strip():
+            raise ValueError("Nome é obrigatório")
+        
+        # Verificar se contém números
+        if re.search(r'\d', v):
+            raise ValueError("O nome não pode conter números")
+        
+        # Dividir em palavras (removendo espaços extras)
+        words = [word for word in v.strip().split() if word]
+        
+        # Verificar se tem pelo menos 2 palavras
+        if len(words) < 2:
+            raise ValueError("O nome deve conter pelo menos 2 palavras")
+        
+        # Verificar se cada palavra tem pelo menos 2 caracteres
+        invalid_words = [word for word in words if len(word) < 2]
+        if invalid_words:
+            raise ValueError("Cada palavra do nome deve ter pelo menos 2 caracteres")
+        
+        return v
 
 
 class CustomerCreate(CustomerBase):
@@ -82,6 +108,34 @@ class CustomerUpdate(BaseModel):
     license_type: Optional[str] = Field(None, pattern="^(Start|Hub)$")
     company: Optional[str] = Field(None, max_length=200)
     active: Optional[bool] = None
+    
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+        """Validates customer name: minimum 2 words, each word with minimum 2 characters, no numbers."""
+        if v is None:
+            return v
+        
+        if not v.strip():
+            raise ValueError("Nome não pode ser vazio")
+        
+        # Verificar se contém números
+        if re.search(r'\d', v):
+            raise ValueError("O nome não pode conter números")
+        
+        # Dividir em palavras (removendo espaços extras)
+        words = [word for word in v.strip().split() if word]
+        
+        # Verificar se tem pelo menos 2 palavras
+        if len(words) < 2:
+            raise ValueError("O nome deve conter pelo menos 2 palavras")
+        
+        # Verificar se cada palavra tem pelo menos 2 caracteres
+        invalid_words = [word for word in words if len(word) < 2]
+        if invalid_words:
+            raise ValueError("Cada palavra do nome deve ter pelo menos 2 caracteres")
+        
+        return v
 
 
 class AssociateCompanyRequest(BaseModel):

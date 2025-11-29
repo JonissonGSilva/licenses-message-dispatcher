@@ -4,9 +4,16 @@ __pycache__/
 *$py.class
 *.so
 .Python
+
+# Ambientes virtuais
 env/
 venv/
 ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Build e distribuição
 build/
 develop-eggs/
 dist/
@@ -19,35 +26,105 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Environment
+# Variáveis de ambiente
 .env
 .env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
 
-# IDE
+# Logs
+*.log
+logs/
+*.log.*
+
+# Testes
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+*.cover
+*.py,cover
+.cache
+nosetests.xml
+coverage.xml
+*.xml
+
+# Arquivos CSV de teste/upload
+uploads/
+temp_csv/
+test_data/
+*_test.csv
+*_invalid.csv
+*_valid.csv
+*_partial_errors.csv
+companies_*.csv
+customers_*.csv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Editor e IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# Logs
-*.log
-logs/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# CSV files (uploads)
-uploads/
-*.csv
-
-# OS
+# Sistema operacional
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+Desktop.ini
 
+# MongoDB
+*.bson
+dump/
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Arquivos de configuração local
+config.local.py
+settings.local.py
+
+# Arquivos de deploy específicos (se necessário)
+*.pem
+*.key
+secrets/
+
+# Arquivos de backup
+*.backup
+*.old

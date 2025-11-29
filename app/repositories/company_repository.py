@@ -168,6 +168,115 @@ class CompanyRepository:
         return await CompanyRepository.find_by_id(company_id)
     
     @staticmethod
+    async def add_contract_renovated(
+        company_id: str,
+        age_contract: int,
+        type_contract: int,
+        is_expirated: bool = False
+    ) -> Optional[Company]:
+        """
+        Adds a new contract renovation record to the company's contract_renovated array.
+        
+        Args:
+            company_id: Company ID
+            age_contract: Age of the contract
+            type_contract: Type of contract
+            is_expirated: Whether the contract is expired
+            
+        Returns:
+            Updated Company or None if not found
+        """
+        collection = CompanyRepository.get_collection()
+        now = datetime.utcnow()
+        
+        contract_record = {
+            "age_contract": age_contract,
+            "type_contract": type_contract,
+            "isExpirated": is_expirated,
+            "created_at": now,
+            "updated_at": now
+        }
+        
+        # Add to array and update updated_at
+        await collection.update_one(
+            {"_id": ObjectId(company_id)},
+            {
+                "$push": {"contract_renovated": contract_record},
+                "$set": {"updated_at": now}
+            }
+        )
+        
+        return await CompanyRepository.find_by_id(company_id)
+    
+    @staticmethod
+    async def mark_latest_contract_expired(company_id: str) -> Optional[Company]:
+        """
+        Marks the most recent contract in contract_renovated array as expired.
+        
+        Args:
+            company_id: Company ID
+            
+        Returns:
+            Updated Company or None if not found
+        """
+        collection = CompanyRepository.get_collection()
+        now = datetime.utcnow()
+        
+        # Get current company to find the latest contract
+        company = await CompanyRepository.find_by_id(company_id)
+        if not company or not company.contract_renovated:
+            return company
+        
+        # Find the index of the most recent contract (last in array)
+        # Since we're using $push, the last element is the most recent
+        contract_count = len(company.contract_renovated)
+        if contract_count == 0:
+            return company
+        
+        # Update the last contract's isExpirated to true
+        # Using array index notation: contract_renovated.<index>
+        last_index = contract_count - 1
+        
+        await collection.update_one(
+            {"_id": ObjectId(company_id)},
+            {
+                "$set": {
+                    f"contract_renovated.{last_index}.isExpirated": True,
+                    f"contract_renovated.{last_index}.updated_at": now,
+                    "updated_at": now
+                }
+            }
+        )
+        
+        return await CompanyRepository.find_by_id(company_id)
+    
+    @staticmethod
+    async def set_is_active(company_id: str, is_active: bool) -> Optional[Company]:
+        """
+        Sets the isActive field on the company.
+        
+        Args:
+            company_id: Company ID
+            is_active: Active status
+            
+        Returns:
+            Updated Company or None if not found
+        """
+        collection = CompanyRepository.get_collection()
+        
+        await collection.update_one(
+            {"_id": ObjectId(company_id)},
+            {
+                "$set": {
+                    "isActive": is_active,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return await CompanyRepository.find_by_id(company_id)
+    
+    @staticmethod
     async def delete(company_id: str) -> bool:
         """Deletes a company."""
         collection = CompanyRepository.get_collection()

@@ -1,0 +1,1224 @@
+{
+	"info": {
+		"_postman_id": "b5f15c2c-8dcf-467f-a933-6c645cdcd8b9",
+		"name": "CDD License",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21556296"
+	},
+	"item": [
+		{
+			"name": "Dev",
+			"item": [
+				{
+					"name": "Customers",
+					"item": [
+						{
+							"name": "Sync Customers By CSV",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/C:/Users/joni_/OneDrive/Documentos/GitHub/licenses-message-dispatcher/customers_valid.csv"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/csv/customers/upload",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"csv",
+										"customers",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Customer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"João Silva\",\n    \"email\": \"joao@example.com\",\n    \"phone\": \"5511999999999\",\n    \"license_type\": \"Start\",\n    \"company\": \"Empresa ABC\",\n    \"active\": true\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/customers",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Customers",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Customers By Pagination",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers?skip=0&limit=10",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Customers By License Type",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers?license_type=Start",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "license_type",
+											"value": "Start"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Active Customers",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers?active=true",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Custormers By Combined Filters",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers?license_type=Hub&active=true&skip=0&limit=20",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "license_type",
+											"value": "Hub"
+										},
+										{
+											"key": "active",
+											"value": "true"
+										},
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Customer By ID",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers/?id=69209f4acd2bf3399bbd3835",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers",
+										""
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "69209f4acd2bf3399bbd3835"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Customer",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"João Silva Atualizado\",\n    \"email\": \"joao.novo@example.com\",\n    \"active\": false\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/customers/69209f4acd2bf3399bbd3835",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers",
+										"69209f4acd2bf3399bbd3835"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Associate Customer To Company",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"company_id\": \"6920a8e380234db8461a1859\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/customers/6920a8fd80234db8461a1863/associate-company",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers",
+										"6920a8fd80234db8461a1863",
+										"associate-company"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Customer",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/customers/6920a6fca99f7401111b8b7c",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"customers",
+										"6920a6fca99f7401111b8b7c"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Companies",
+					"item": [
+						{
+							"name": "Create Company",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Empresa ABC\",\n    \"cnpj\": \"12345678000190\",\n    \"email\": \"contato@empresaxyz.com\",\n    \"phone\": \"5511888888888\",\n    \"address\": \"Rua Exemplo, 123\",\n    \"city\": \"São Paulo\",\n    \"state\": \"SP\",\n    \"zip_code\": \"01234567\",\n    \"linked\": true,\n    \"active\": true,\n    \"license_timeout\": 3600,\n    \"contract_expiration\": \"2024-12-31\",\n    \"employee_count\": 50,\n    \"license_type\": \"Hub\",\n    \"portal_id\": \"PORTAL123\",\n    \"notes\": \"Cliente importante\"\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/companies",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Companies",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Companies By Pagination",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies?skip=0&limit=10",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									],
+									"query": [
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Active Companies",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies?active=true",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Companies Linked",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies?linked=true",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									],
+									"query": [
+										{
+											"key": "linked",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Companies By License Type",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies?license_type=Hub",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									],
+									"query": [
+										{
+											"key": "license_type",
+											"value": "Hub"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Companies By Combined Filters",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies?active=true&linked=true&license_type=Hub&skip=0&limit=20",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										},
+										{
+											"key": "linked",
+											"value": "true"
+										},
+										{
+											"key": "license_type",
+											"value": "Hub"
+										},
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Compay By ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/?id=6920a1c5cd2bf3399bbd3836",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										""
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "6920a1c5cd2bf3399bbd3836"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get List Company Collaborators",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/6920a8e380234db8461a1859/customers",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"6920a8e380234db8461a1859",
+										"customers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get List Active Collaborators",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/6920a8e380234db8461a1859/customers?active=true",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"6920a8e380234db8461a1859",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get List Collaborators By Pagination",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/6920a8e380234db8461a1859/customers?skip=0&limit=10",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"6920a8e380234db8461a1859",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get List Collaborators By Filters",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/6920a8e380234db8461a1859/customers?active=true&skip=0&limit=20",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"6920a8e380234db8461a1859",
+										"customers"
+									],
+									"query": [
+										{
+											"key": "active",
+											"value": "true"
+										},
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "20"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Company",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Empresa ABC Atualizada\",\n    \"active\": true,\n    \"employee_count\": 75\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/companies/6920a8e380234db8461a1859",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"6920a8e380234db8461a1859"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Sync Companies By CSV",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": "/C:/Users/joni_/OneDrive/Documentos/GitHub/licenses-message-dispatcher/companies_valid.csv"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/csv/companies/upload",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"csv",
+										"companies",
+										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Company",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/6920a1c5cd2bf3399bbd3836",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"6920a1c5cd2bf3399bbd3836"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Licenses",
+					"item": [
+						{
+							"name": "Create License",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"customer_id\": \"507f1f77bcf86cd799439011\",\n    \"license_type\": \"Start\",\n    \"status\": \"active\",\n    \"portal_id\": \"LICENSE123\"\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/licenses",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"licenses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Licenses",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/licenses",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"licenses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Licenses By Pagination",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/licenses?skip=0&limit=10",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"licenses"
+									],
+									"query": [
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get License By ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/licenses/6920af0fb144357f04275ae9",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"licenses",
+										"6920af0fb144357f04275ae9"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update License",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"license_type\": \"Hub\"\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/licenses/6920af0fb144357f04275ae9",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"licenses",
+										"6920af0fb144357f04275ae9"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Messages (Pending Tests))",
+					"item": [
+						{
+							"name": "Send Massive Messages",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/messages/send-mass?license_type=Start",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"messages",
+										"send-mass"
+									],
+									"query": [
+										{
+											"key": "license_type",
+											"value": "Start"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Messages By ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/messages/507f1f77bcf86cd799439011",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"messages",
+										"507f1f77bcf86cd799439011"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Messages",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/messages",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"messages"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Messages By Customer",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/messages?customer_id=507f1f77bcf86cd799439011",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"messages"
+									],
+									"query": [
+										{
+											"key": "customer_id",
+											"value": "507f1f77bcf86cd799439011"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Webhooks (Pending Tests)",
+					"item": [
+						{
+							"name": "Verify WhatsApp Webhook",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/webhooks/whatsapp?mode=subscribe&token=SEU_VERIFY_TOKEN&challenge=CHALLENGE_STRING",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"webhooks",
+										"whatsapp"
+									],
+									"query": [
+										{
+											"key": "mode",
+											"value": "subscribe"
+										},
+										{
+											"key": "token",
+											"value": "SEU_VERIFY_TOKEN"
+										},
+										{
+											"key": "challenge",
+											"value": "CHALLENGE_STRING"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Recive WhatsApp Webhook",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"object\": \"whatsapp_business_account\",\n    \"entry\": [\n      {\n        \"id\": \"WHATSAPP_BUSINESS_ACCOUNT_ID\",\n        \"changes\": [\n          {\n            \"value\": {\n              \"messaging_product\": \"whatsapp\",\n              \"metadata\": {\n                \"display_phone_number\": \"PHONE_NUMBER\",\n                \"phone_number_id\": \"PHONE_NUMBER_ID\"\n              }\n            },\n            \"field\": \"messages\"\n          }\n        ]\n      }\n    ]\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/webhooks/whatsapp",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"webhooks",
+										"whatsapp"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Webhook Created License",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"portal_id\": \"LICENSE123\",\n    \"license_type\": \"Start\",\n    \"customer_phone\": \"5511999999999\",\n    \"customer_email\": \"cliente@example.com\",\n    \"extra_data\": {\n      \"name\": \"João Silva\",\n      \"company\": \"Empresa ABC\"\n    }\n  }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/webhooks/license-created",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"webhooks",
+										"license-created"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/health",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Prod",
+			"item": [
+				{
+					"name": "Customers",
+					"item": []
+				},
+				{
+					"name": "Companies",
+					"item": []
+				},
+				{
+					"name": "Licenses",
+					"item": []
+				},
+				{
+					"name": "Healthcheck PROD",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api-cdd-rfgy.onrender.com/health",
+							"protocol": "https",
+							"host": [
+								"api-cdd-rfgy",
+								"onrender",
+								"com"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

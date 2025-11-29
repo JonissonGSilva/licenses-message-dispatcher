@@ -402,4 +402,39 @@ class CustomerRepository:
         
         logger.info(f"Found {len(duplicates)} duplicate(s) out of {len(customers)} customers to check")
         return duplicates
+    
+    @staticmethod
+    async def update_license_type_by_company(company_id: ObjectId, new_license_type: str) -> int:
+        """
+        Updates the license type for all customers that belong to this company.
+        
+        Args:
+            company_id: Company ObjectId
+            new_license_type: New license type (Start or Hub)
+            
+        Returns:
+            Number of customers updated
+        """
+        collection = CustomerRepository.get_collection()
+        
+        try:
+            # Update license type for all customers with this company reference
+            result = await collection.update_many(
+                {"company.id": company_id},
+                {
+                    "$set": {
+                        "license_type": new_license_type,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                logger.info(f"Updated license type to '{new_license_type}' for {result.modified_count} customer(s) of company ID: {company_id}")
+            
+            return result.modified_count
+        except Exception as e:
+            logger.error(f"Error updating license type by company: {type(e).__name__}: {e}")
+            logger.error(f"Error details:", exc_info=True)
+            raise
 
