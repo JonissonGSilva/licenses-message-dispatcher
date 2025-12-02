@@ -15,7 +15,6 @@ class CompanyStats(BaseModel):
     """Company statistics."""
     total: int = Field(..., description="Total companies")
     active: int = Field(..., description="Active companies")
-    linked: int = Field(..., description="Linked companies")
     by_license_type: Dict[str, int] = Field(..., description="Companies by license type")
 
 

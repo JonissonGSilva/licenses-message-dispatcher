@@ -316,7 +316,6 @@ async def upload_companies_csv(
     - city/cidade: Company city
     - state/estado: Company state
     - zip_code/cep: ZIP code
-    - linked/vinculada: Whether company is linked (True/False)
     - active/ativa: Whether company is active (True/False, default: True)
     - license_timeout/timeout_licenca: License timeout in seconds
     - contract_expiration/expiracao_contrato: Contract expiration date (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
@@ -474,7 +473,6 @@ async def upload_companies_csv(
                     city=c.city,
                     state=c.state,
                     zip_code=c.zip_code,
-                    linked=c.linked,
                     active=c.active,
                     license_timeout=c.license_timeout,
                     contract_expiration=c.contract_expiration,

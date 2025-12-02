@@ -1,6 +1,7 @@
 """Routes for team management (Direta, Indicador, Parceiro, Negocio)."""
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
+from pydantic import BaseModel, Field
 from app.repositories.team_repository import (
     DiretaRepository, IndicadorRepository, ParceiroRepository, NegocioRepository
 )
@@ -10,7 +11,7 @@ from app.models.team import (
     ParceiroResponse, ParceiroCreate, ParceiroUpdate, ParceiroPaginatedResponse,
     ParceiroWithNegociosResponse, NegocioResponse, NegocioCreate, NegocioUpdate
 )
-from app.models.customer import normalize_company_field
+from app.models.customer import normalize_company_field, normalize_company_array_field, normalize_company_array_field_for_response
 from bson.errors import InvalidId
 from bson import ObjectId
 import logging
@@ -29,14 +30,14 @@ async def create_direta(direta: DiretaCreate):
         direta_created = await DiretaRepository.create(direta)
         return DiretaResponse(
             id=str(direta_created.id),
-            nome=direta_created.nome,
+            name=direta_created.name,
             cpf=direta_created.cpf,
-            telefone=direta_created.telefone,
+            phone=direta_created.phone,
             email=direta_created.email,
-            tipo=direta_created.tipo,
-            funcao=direta_created.funcao,
-            remuneracao=direta_created.remuneracao,
-            comissao=direta_created.comissao,
+            type=direta_created.type,
+            function=direta_created.function,
+            remuneration=direta_created.remuneration,
+            commission=direta_created.commission,
             created_at=direta_created.created_at,
             updated_at=direta_created.updated_at
         )
@@ -61,14 +62,14 @@ async def list_direta(
             data=[
                 DiretaResponse(
                     id=str(d.id),
-                    nome=d.nome,
+                    name=d.name,
                     cpf=d.cpf,
-                    telefone=d.telefone,
+                    phone=d.phone,
                     email=d.email,
-                    tipo=d.tipo,
-                    funcao=d.funcao,
-                    remuneracao=d.remuneracao,
-                    comissao=d.comissao,
+                    type=d.type,
+                    function=d.function,
+                    remuneration=d.remuneration,
+                    commission=d.commission,
                     created_at=d.created_at,
                     updated_at=d.updated_at
                 )
@@ -93,14 +94,14 @@ async def get_direta(direta_id: str):
         
         return DiretaResponse(
             id=str(direta.id),
-            nome=direta.nome,
+            name=direta.name,
             cpf=direta.cpf,
-            telefone=direta.telefone,
+            phone=direta.phone,
             email=direta.email,
-            tipo=direta.tipo,
-            funcao=direta.funcao,
-            remuneracao=direta.remuneracao,
-            comissao=direta.comissao,
+            type=direta.type,
+            function=direta.function,
+            remuneration=direta.remuneration,
+            commission=direta.commission,
             created_at=direta.created_at,
             updated_at=direta.updated_at
         )
@@ -123,14 +124,14 @@ async def update_direta(direta_id: str, direta_update: DiretaUpdate):
         
         return DiretaResponse(
             id=str(direta.id),
-            nome=direta.nome,
+            name=direta.name,
             cpf=direta.cpf,
-            telefone=direta.telefone,
+            phone=direta.phone,
             email=direta.email,
-            tipo=direta.tipo,
-            funcao=direta.funcao,
-            remuneracao=direta.remuneracao,
-            comissao=direta.comissao,
+            type=direta.type,
+            function=direta.function,
+            remuneration=direta.remuneration,
+            commission=direta.commission,
             created_at=direta.created_at,
             updated_at=direta.updated_at
         )
@@ -166,24 +167,24 @@ async def create_indicador(indicador: IndicadorCreate):
     """Creates a new Indicador."""
     try:
         # Validate company if provided
-        if indicador.empresa and isinstance(indicador.empresa, str):
+        if indicador.company and isinstance(indicador.company, str):
             from app.repositories.team_repository import TeamRepository
-            company_ref = await TeamRepository.resolve_company_reference(indicador.empresa, validate_status=True)
+            company_ref = await TeamRepository.resolve_company_reference(indicador.company, validate_status=True)
             if not company_ref:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Company '{indicador.empresa}' not found, is not linked, or is not active"
+                    detail=f"Company '{indicador.company}' not found or is not active"
                 )
         
         indicador_created = await IndicadorRepository.create(indicador)
         
         return IndicadorResponse(
             id=str(indicador_created.id),
-            nome=indicador_created.nome,
-            empresa=normalize_company_field(indicador_created.empresa),
-            telefone=indicador_created.telefone,
+            name=indicador_created.name,
+            company=normalize_company_array_field_for_response(indicador_created.company),
+            phone=indicador_created.phone,
             email=indicador_created.email,
-            comissao=indicador_created.comissao,
+            commission=indicador_created.commission,
             created_at=indicador_created.created_at,
             updated_at=indicador_created.updated_at
         )
@@ -209,11 +210,11 @@ async def list_indicador(
             data=[
                 IndicadorResponse(
                     id=str(i.id),
-                    nome=i.nome,
-                    empresa=normalize_company_field(i.empresa),
-                    telefone=i.telefone,
+                    name=i.name,
+                    company=normalize_company_array_field_for_response(i.company),
+                    phone=i.phone,
                     email=i.email,
-                    comissao=i.comissao,
+                    commission=i.commission,
                     created_at=i.created_at,
                     updated_at=i.updated_at
                 )
@@ -234,15 +235,15 @@ async def get_indicador(indicador_id: str):
     try:
         indicador = await IndicadorRepository.get_by_id(indicador_id)
         if not indicador:
-            raise HTTPException(status_code=404, detail="Indicador not found")
+            raise HTTPException(status_code=404, detail="Indicador não encontrado")
         
         return IndicadorResponse(
             id=str(indicador.id),
-            nome=indicador.nome,
-            empresa=normalize_company_field(indicador.empresa),
-            telefone=indicador.telefone,
+            name=indicador.name,
+            company=normalize_company_array_field_for_response(indicador.company),
+            phone=indicador.phone,
             email=indicador.email,
-            comissao=indicador.comissao,
+            commission=indicador.commission,
             created_at=indicador.created_at,
             updated_at=indicador.updated_at
         )
@@ -260,28 +261,28 @@ async def update_indicador(indicador_id: str, indicador_update: IndicadorUpdate)
     """Updates an Indicador."""
     try:
         # Validate company if provided
-        if "empresa" in indicador_update.model_dump(exclude_unset=True):
-            company_value = indicador_update.empresa
+        if "company" in indicador_update.model_dump(exclude_unset=True):
+            company_value = indicador_update.company
             if company_value and isinstance(company_value, str):
                 from app.repositories.team_repository import TeamRepository
                 company_ref = await TeamRepository.resolve_company_reference(company_value, validate_status=True)
                 if not company_ref:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Company '{company_value}' not found, is not linked, or is not active"
+                        detail=f"Company '{company_value}' not found or is not active"
                     )
         
         indicador = await IndicadorRepository.update(indicador_id, indicador_update)
         if not indicador:
-            raise HTTPException(status_code=404, detail="Indicador not found")
+            raise HTTPException(status_code=404, detail="Indicador não encontrado")
         
         return IndicadorResponse(
             id=str(indicador.id),
-            nome=indicador.nome,
-            empresa=normalize_company_field(indicador.empresa),
-            telefone=indicador.telefone,
+            name=indicador.name,
+            company=normalize_company_array_field_for_response(indicador.company),
+            phone=indicador.phone,
             email=indicador.email,
-            comissao=indicador.comissao,
+            commission=indicador.commission,
             created_at=indicador.created_at,
             updated_at=indicador.updated_at
         )
@@ -300,13 +301,81 @@ async def delete_indicador(indicador_id: str):
     try:
         deleted = await IndicadorRepository.delete(indicador_id)
         if not deleted:
-            raise HTTPException(status_code=404, detail="Indicador not found")
+            raise HTTPException(status_code=404, detail="Indicador não encontrado")
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid ID")
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error deleting indicador: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Request schema for linking companies
+class LinkCompanyRequest(BaseModel):
+    """Request schema for linking a company."""
+    company_name: str = Field(..., min_length=1, description="Company name to link")
+
+
+@router.post("/indicador/{indicador_id}/link-company", response_model=IndicadorResponse)
+async def link_company_to_indicador(indicador_id: str, request: LinkCompanyRequest):
+    """Links a company to an Indicador. Validates that the company is not already linked."""
+    try:
+        indicador = await IndicadorRepository.link_company(indicador_id, request.company_name)
+        if not indicador:
+            raise HTTPException(status_code=404, detail="Indicador não encontrado")
+        
+        logger.info(f"Company '{request.company_name}' linked to indicador '{indicador.name}' (ID: {indicador_id})")
+        
+        return IndicadorResponse(
+            id=str(indicador.id),
+            name=indicador.name,
+            company=normalize_company_array_field_for_response(indicador.company),
+            phone=indicador.phone,
+            email=indicador.email,
+            commission=indicador.commission,
+            created_at=indicador.created_at,
+            updated_at=indicador.updated_at
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error linking company to indicador: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/indicador/{indicador_id}/unlink-company", response_model=IndicadorResponse)
+async def unlink_company_from_indicador(indicador_id: str):
+    """Unlinks the active company from an Indicador."""
+    try:
+        indicador = await IndicadorRepository.unlink_company(indicador_id)
+        if not indicador:
+            raise HTTPException(status_code=404, detail="Indicador não encontrado")
+        
+        logger.info(f"Company unlinked from indicador '{indicador.name}' (ID: {indicador_id})")
+        
+        return IndicadorResponse(
+            id=str(indicador.id),
+            name=indicador.name,
+            company=normalize_company_array_field_for_response(indicador.company),
+            phone=indicador.phone,
+            email=indicador.email,
+            commission=indicador.commission,
+            created_at=indicador.created_at,
+            updated_at=indicador.updated_at
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unlinking company from indicador: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -317,13 +386,13 @@ async def create_parceiro(parceiro: ParceiroCreate):
     """Creates a new Parceiro."""
     try:
         # Validate company if provided
-        if parceiro.empresa and isinstance(parceiro.empresa, str):
+        if parceiro.company and isinstance(parceiro.company, str):
             from app.repositories.team_repository import TeamRepository
-            company_ref = await TeamRepository.resolve_company_reference(parceiro.empresa, validate_status=True)
+            company_ref = await TeamRepository.resolve_company_reference(parceiro.company, validate_status=True)
             if not company_ref:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Company '{parceiro.empresa}' not found, is not linked, or is not active"
+                    detail=f"Company '{parceiro.company}' not found or is not active"
                 )
         
         parceiro_created = await ParceiroRepository.create(parceiro)
@@ -333,24 +402,24 @@ async def create_parceiro(parceiro: ParceiroCreate):
         
         return ParceiroWithNegociosResponse(
             id=str(parceiro_created.id),
-            nome=parceiro_created.nome,
-            empresa=normalize_company_field(parceiro_created.empresa),
-            tipo=parceiro_created.tipo,
-            telefone=parceiro_created.telefone,
+            name=parceiro_created.name,
+            company=normalize_company_array_field_for_response(parceiro_created.company),
+            type=parceiro_created.type,
+            phone=parceiro_created.phone,
             email=parceiro_created.email,
-            comissao=parceiro_created.comissao,
+            commission=parceiro_created.commission,
             created_at=parceiro_created.created_at,
             updated_at=parceiro_created.updated_at,
             negocios=[
                 NegocioResponse(
                     id=str(n.id),
-                    empresa_terceira=n.empresa_terceira,
-                    tipo=n.tipo,
-                    qtd_licencas=n.qtd_licencas,
-                    valor_negociacao=n.valor_negociacao,
-                    tempo_contrato=n.tempo_contrato,
-                    data_inicio=n.data_inicio,
-                    data_pagamento=n.data_pagamento,
+                    third_party_company=n.third_party_company,
+                    type=n.type,
+                    license_count=n.license_count,
+                    negotiation_value=n.negotiation_value,
+                    contract_duration=n.contract_duration,
+                    start_date=n.start_date,
+                    payment_date=n.payment_date,
                     created_at=n.created_at,
                     updated_at=n.updated_at
                 )
@@ -382,24 +451,24 @@ async def list_parceiro(
             parceiros_with_negocios.append(
                 ParceiroWithNegociosResponse(
                     id=str(parceiro.id),
-                    nome=parceiro.nome,
-                    empresa=normalize_company_field(parceiro.empresa),
-                    tipo=parceiro.tipo,
-                    telefone=parceiro.telefone,
+                    name=parceiro.name,
+                    company=normalize_company_array_field_for_response(parceiro.company),
+                    type=parceiro.type,
+                    phone=parceiro.phone,
                     email=parceiro.email,
-                    comissao=parceiro.comissao,
+                    commission=parceiro.commission,
                     created_at=parceiro.created_at,
                     updated_at=parceiro.updated_at,
                     negocios=[
                         NegocioResponse(
                             id=str(n.id),
-                            empresa_terceira=n.empresa_terceira,
-                            tipo=n.tipo,
-                            qtd_licencas=n.qtd_licencas,
-                            valor_negociacao=n.valor_negociacao,
-                            tempo_contrato=n.tempo_contrato,
-                            data_inicio=n.data_inicio,
-                            data_pagamento=n.data_pagamento,
+                            third_party_company=n.third_party_company,
+                            type=n.type,
+                            license_count=n.license_count,
+                            negotiation_value=n.negotiation_value,
+                            contract_duration=n.contract_duration,
+                            start_date=n.start_date,
+                            payment_date=n.payment_date,
                             created_at=n.created_at,
                             updated_at=n.updated_at
                         )
@@ -425,31 +494,31 @@ async def get_parceiro(parceiro_id: str):
     try:
         parceiro = await ParceiroRepository.get_by_id(parceiro_id)
         if not parceiro:
-            raise HTTPException(status_code=404, detail="Parceiro not found")
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
         
         # Get negocios for this parceiro
         negocios = await NegocioRepository.list_by_parceiro(parceiro_id)
         
         return ParceiroWithNegociosResponse(
             id=str(parceiro.id),
-            nome=parceiro.nome,
-            empresa=normalize_company_field(parceiro.empresa),
-            tipo=parceiro.tipo,
-            telefone=parceiro.telefone,
+            name=parceiro.name,
+            company=normalize_company_array_field_for_response(parceiro.company),
+            type=parceiro.type,
+            phone=parceiro.phone,
             email=parceiro.email,
-            comissao=parceiro.comissao,
+            commission=parceiro.commission,
             created_at=parceiro.created_at,
             updated_at=parceiro.updated_at,
             negocios=[
                 NegocioResponse(
                     id=str(n.id),
-                    empresa_terceira=n.empresa_terceira,
-                    tipo=n.tipo,
-                    qtd_licencas=n.qtd_licencas,
-                    valor_negociacao=n.valor_negociacao,
-                    tempo_contrato=n.tempo_contrato,
-                    data_inicio=n.data_inicio,
-                    data_pagamento=n.data_pagamento,
+                    third_party_company=n.third_party_company,
+                    type=n.type,
+                    license_count=n.license_count,
+                    negotiation_value=n.negotiation_value,
+                    contract_duration=n.contract_duration,
+                    start_date=n.start_date,
+                    payment_date=n.payment_date,
                     created_at=n.created_at,
                     updated_at=n.updated_at
                 )
@@ -470,44 +539,44 @@ async def update_parceiro(parceiro_id: str, parceiro_update: ParceiroUpdate):
     """Updates a Parceiro."""
     try:
         # Validate company if provided
-        if "empresa" in parceiro_update.model_dump(exclude_unset=True):
-            company_value = parceiro_update.empresa
+        if "company" in parceiro_update.model_dump(exclude_unset=True):
+            company_value = parceiro_update.company
             if company_value and isinstance(company_value, str):
                 from app.repositories.team_repository import TeamRepository
                 company_ref = await TeamRepository.resolve_company_reference(company_value, validate_status=True)
                 if not company_ref:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Company '{company_value}' not found, is not linked, or is not active"
+                        detail=f"Company '{company_value}' not found or is not active"
                     )
         
         parceiro = await ParceiroRepository.update(parceiro_id, parceiro_update)
         if not parceiro:
-            raise HTTPException(status_code=404, detail="Parceiro not found")
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
         
         # Get negocios for this parceiro
         negocios = await NegocioRepository.list_by_parceiro(parceiro_id)
         
         return ParceiroWithNegociosResponse(
             id=str(parceiro.id),
-            nome=parceiro.nome,
-            empresa=normalize_company_field(parceiro.empresa),
-            tipo=parceiro.tipo,
-            telefone=parceiro.telefone,
+            name=parceiro.name,
+            company=normalize_company_array_field_for_response(parceiro.company),
+            type=parceiro.type,
+            phone=parceiro.phone,
             email=parceiro.email,
-            comissao=parceiro.comissao,
+            commission=parceiro.commission,
             created_at=parceiro.created_at,
             updated_at=parceiro.updated_at,
             negocios=[
                 NegocioResponse(
                     id=str(n.id),
-                    empresa_terceira=n.empresa_terceira,
-                    tipo=n.tipo,
-                    qtd_licencas=n.qtd_licencas,
-                    valor_negociacao=n.valor_negociacao,
-                    tempo_contrato=n.tempo_contrato,
-                    data_inicio=n.data_inicio,
-                    data_pagamento=n.data_pagamento,
+                    third_party_company=n.third_party_company,
+                    type=n.type,
+                    license_count=n.license_count,
+                    negotiation_value=n.negotiation_value,
+                    contract_duration=n.contract_duration,
+                    start_date=n.start_date,
+                    payment_date=n.payment_date,
                     created_at=n.created_at,
                     updated_at=n.updated_at
                 )
@@ -529,13 +598,111 @@ async def delete_parceiro(parceiro_id: str):
     try:
         deleted = await ParceiroRepository.delete(parceiro_id)
         if not deleted:
-            raise HTTPException(status_code=404, detail="Parceiro not found")
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid ID")
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error deleting parceiro: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/parceiro/{parceiro_id}/link-company", response_model=ParceiroWithNegociosResponse)
+async def link_company_to_parceiro(parceiro_id: str, request: LinkCompanyRequest):
+    """Links a company to a Parceiro. Validates that the company is not already linked."""
+    try:
+        parceiro = await ParceiroRepository.link_company(parceiro_id, request.company_name)
+        if not parceiro:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+        
+        # Get negocios for this parceiro
+        negocios = await NegocioRepository.list_by_parceiro(parceiro_id)
+        
+        return ParceiroWithNegociosResponse(
+            id=str(parceiro.id),
+            name=parceiro.name,
+            company=normalize_company_array_field_for_response(parceiro.company),
+            type=parceiro.type,
+            phone=parceiro.phone,
+            email=parceiro.email,
+            commission=parceiro.commission,
+            created_at=parceiro.created_at,
+            updated_at=parceiro.updated_at,
+            negocios=[
+                NegocioResponse(
+                    id=str(n.id),
+                    third_party_company=n.third_party_company,
+                    type=n.type,
+                    license_count=n.license_count,
+                    negotiation_value=n.negotiation_value,
+                    contract_duration=n.contract_duration,
+                    start_date=n.start_date,
+                    payment_date=n.payment_date,
+                    created_at=n.created_at,
+                    updated_at=n.updated_at
+                )
+                for n in negocios
+            ]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error linking company to parceiro: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/parceiro/{parceiro_id}/unlink-company", response_model=ParceiroWithNegociosResponse)
+async def unlink_company_from_parceiro(parceiro_id: str):
+    """Unlinks the active company from a Parceiro."""
+    try:
+        parceiro = await ParceiroRepository.unlink_company(parceiro_id)
+        if not parceiro:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+        
+        logger.info(f"Company unlinked from parceiro '{parceiro.name}' (ID: {parceiro_id})")
+        
+        # Get negocios for this parceiro
+        negocios = await NegocioRepository.list_by_parceiro(parceiro_id)
+        
+        return ParceiroWithNegociosResponse(
+            id=str(parceiro.id),
+            name=parceiro.name,
+            company=normalize_company_array_field_for_response(parceiro.company),
+            type=parceiro.type,
+            phone=parceiro.phone,
+            email=parceiro.email,
+            commission=parceiro.commission,
+            created_at=parceiro.created_at,
+            updated_at=parceiro.updated_at,
+            negocios=[
+                NegocioResponse(
+                    id=str(n.id),
+                    third_party_company=n.third_party_company,
+                    type=n.type,
+                    license_count=n.license_count,
+                    negotiation_value=n.negotiation_value,
+                    contract_duration=n.contract_duration,
+                    start_date=n.start_date,
+                    payment_date=n.payment_date,
+                    created_at=n.created_at,
+                    updated_at=n.updated_at
+                )
+                for n in negocios
+            ]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid ID")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unlinking company from parceiro: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -548,19 +715,19 @@ async def create_negocio(parceiro_id: str, negocio: NegocioCreate):
         # Verify parceiro exists
         parceiro = await ParceiroRepository.get_by_id(parceiro_id)
         if not parceiro:
-            raise HTTPException(status_code=404, detail="Parceiro not found")
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
         
         negocio_created = await NegocioRepository.create(negocio, parceiro_id)
         
         return NegocioResponse(
             id=str(negocio_created.id),
-            empresa_terceira=negocio_created.empresa_terceira,
-            tipo=negocio_created.tipo,
-            qtd_licencas=negocio_created.qtd_licencas,
-            valor_negociacao=negocio_created.valor_negociacao,
-            tempo_contrato=negocio_created.tempo_contrato,
-            data_inicio=negocio_created.data_inicio,
-            data_pagamento=negocio_created.data_pagamento,
+            third_party_company=negocio_created.third_party_company,
+            type=negocio_created.type,
+            license_count=negocio_created.license_count,
+            negotiation_value=negocio_created.negotiation_value,
+            contract_duration=negocio_created.contract_duration,
+            start_date=negocio_created.start_date,
+            payment_date=negocio_created.payment_date,
             created_at=negocio_created.created_at,
             updated_at=negocio_created.updated_at
         )
@@ -580,20 +747,20 @@ async def list_negocios(parceiro_id: str):
         # Verify parceiro exists
         parceiro = await ParceiroRepository.get_by_id(parceiro_id)
         if not parceiro:
-            raise HTTPException(status_code=404, detail="Parceiro not found")
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
         
         negocios = await NegocioRepository.list_by_parceiro(parceiro_id)
         
         return [
             NegocioResponse(
                 id=str(n.id),
-                empresa_terceira=n.empresa_terceira,
-                tipo=n.tipo,
-                qtd_licencas=n.qtd_licencas,
-                valor_negociacao=n.valor_negociacao,
-                tempo_contrato=n.tempo_contrato,
-                data_inicio=n.data_inicio,
-                data_pagamento=n.data_pagamento,
+                third_party_company=n.third_party_company,
+                type=n.type,
+                license_count=n.license_count,
+                negotiation_value=n.negotiation_value,
+                contract_duration=n.contract_duration,
+                start_date=n.start_date,
+                payment_date=n.payment_date,
                 created_at=n.created_at,
                 updated_at=n.updated_at
             )
@@ -618,13 +785,13 @@ async def get_negocio(negocio_id: str):
         
         return NegocioResponse(
             id=str(negocio.id),
-            empresa_terceira=negocio.empresa_terceira,
-            tipo=negocio.tipo,
-            qtd_licencas=negocio.qtd_licencas,
-            valor_negociacao=negocio.valor_negociacao,
-            tempo_contrato=negocio.tempo_contrato,
-            data_inicio=negocio.data_inicio,
-            data_pagamento=negocio.data_pagamento,
+            third_party_company=negocio.third_party_company,
+            type=negocio.type,
+            license_count=negocio.license_count,
+            negotiation_value=negocio.negotiation_value,
+            contract_duration=negocio.contract_duration,
+            start_date=negocio.start_date,
+            payment_date=negocio.payment_date,
             created_at=negocio.created_at,
             updated_at=negocio.updated_at
         )
@@ -647,13 +814,13 @@ async def update_negocio(negocio_id: str, negocio_update: NegocioUpdate):
         
         return NegocioResponse(
             id=str(negocio.id),
-            empresa_terceira=negocio.empresa_terceira,
-            tipo=negocio.tipo,
-            qtd_licencas=negocio.qtd_licencas,
-            valor_negociacao=negocio.valor_negociacao,
-            tempo_contrato=negocio.tempo_contrato,
-            data_inicio=negocio.data_inicio,
-            data_pagamento=negocio.data_pagamento,
+            third_party_company=negocio.third_party_company,
+            type=negocio.type,
+            license_count=negocio.license_count,
+            negotiation_value=negocio.negotiation_value,
+            contract_duration=negocio.contract_duration,
+            start_date=negocio.start_date,
+            payment_date=negocio.payment_date,
             created_at=negocio.created_at,
             updated_at=negocio.updated_at
         )

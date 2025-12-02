@@ -25,7 +25,6 @@ class CompanyBase(BaseModel):
     city: Optional[str] = Field(None, max_length=100, description="Company city")
     state: Optional[str] = Field(None, max_length=2, description="Company state (2 letters)")
     zip_code: Optional[str] = Field(None, max_length=10, description="ZIP code")
-    linked: bool = Field(default=False, description="Indicates if the company is linked/associated")
     active: bool = Field(default=True, description="Indicates if the company is active (legacy field)")
     status: Optional[str] = Field(default="ativo", pattern="^(ativo|suspenso|em_negociacao)$", description="Company status: ativo, suspenso, em_negociacao")
     contract_expiration: Optional[datetime] = Field(None, description="Contract expiration date")
@@ -52,7 +51,6 @@ class CompanyUpdate(BaseModel):
     city: Optional[str] = Field(None, max_length=100)
     state: Optional[str] = Field(None, max_length=2)
     zip_code: Optional[str] = Field(None, max_length=10)
-    linked: Optional[bool] = None
     active: Optional[bool] = None
     contract_expiration: Optional[datetime] = None
     employee_count: Optional[int] = Field(None, ge=0)
@@ -82,7 +80,6 @@ class Company(CompanyBase):
                 "city": "São Paulo",
                 "state": "SP",
                 "zip_code": "01234-567",
-                "linked": True,
                 "active": True,
                 "contract_expiration": "2024-12-31T23:59:59",
                 "employee_count": 150,
@@ -104,7 +101,6 @@ class CompanyResponse(BaseModel):
     city: Optional[str]
     state: Optional[str]
     zip_code: Optional[str]
-    linked: bool
     active: bool
     status: Optional[str]
     contract_expiration: Optional[datetime]

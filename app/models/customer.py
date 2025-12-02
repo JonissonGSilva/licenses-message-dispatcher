@@ -1,5 +1,5 @@
 """Customer model."""
-from typing import Optional, Annotated, Union, Any
+from typing import Optional, Annotated, Union, Any, List
 from datetime import datetime
 from pydantic import BaseModel, Field, EmailStr, BeforeValidator, GetCoreSchemaHandler, field_validator
 from pydantic_core import core_schema
@@ -43,9 +43,10 @@ class PyObjectId(ObjectId):
 
 
 class CompanyReference(BaseModel):
-    """Reference to a Company with ID and name."""
+    """Reference to a Company with ID, name and active status."""
     id: PyObjectId = Field(..., description="Company ID (ObjectId)")
     name: str = Field(..., description="Company name")
+    isCompanyActive: Optional[bool] = Field(default=False, description="Indicates if the company is currently active")
     
     model_config = {
         "populate_by_name": True,
@@ -54,7 +55,8 @@ class CompanyReference(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": "507f1f77bcf86cd799439011",
-                "name": "TechSolutions Ltda"
+                "name": "TechSolutions Ltda",
+                "isCompanyActive": True
             }
         }
     }
@@ -66,7 +68,7 @@ class CustomerBase(BaseModel):
     email: Optional[EmailStr] = Field(None, description="Customer email")
     phone: str = Field(..., min_length=10, max_length=20, description="Phone with area code and country code")
     license_type: str = Field(..., pattern="^(Start|Hub)$", description="License type: Start or Hub")
-    company: Optional[Union[str, CompanyReference, dict]] = Field(None, description="Company name (string) or Company reference (object with id and name)")
+    company: Optional[List[Union[CompanyReference, dict]]] = Field(default_factory=list, description="List of company references", alias="empresa")
     active: bool = Field(default=True, description="Indicates if the customer is active")
     
     @field_validator("name")
@@ -106,7 +108,7 @@ class CustomerUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(None, min_length=10, max_length=20)
     license_type: Optional[str] = Field(None, pattern="^(Start|Hub)$")
-    company: Optional[str] = Field(None, max_length=200)
+    company: Optional[List[Union[CompanyReference, dict]]] = Field(None)
     active: Optional[bool] = None
     
     @field_validator("name")
@@ -192,11 +194,10 @@ def normalize_company_field(company_value: Any) -> Optional[Union[str, dict]]:
         return company_value
     
     if isinstance(company_value, dict):
-        # Convert ObjectId to string if present
-        result = company_value.copy()
-        if "id" in result:
-            result["id"] = str(result["id"])
-        return result
+        # Keep ObjectId as ObjectId - don't convert to string here
+        # This function is used for backward compatibility, but we want to preserve ObjectId
+        # for Pydantic validation. String conversion happens in CustomerResponse.
+        return company_value.copy()
     
     # If it's a CompanyReference or other Pydantic model, convert to dict
     if hasattr(company_value, "model_dump"):
@@ -209,6 +210,135 @@ def normalize_company_field(company_value: Any) -> Optional[Union[str, dict]]:
     return str(company_value)
 
 
+def normalize_company_array_field(company_value: Any) -> List[dict]:
+    """
+    Normalizes company field to be a list of dicts with string ids.
+    Returns ALL companies (active and inactive) for historical purposes.
+    Handles backward compatibility with single object or string.
+    
+    Args:
+        company_value: Company value (can be list, str, dict, CompanyReference, or None)
+        
+    Returns:
+        List of normalized company dicts with string ids (all companies, not just active)
+    """
+    if company_value is None:
+        return []
+    
+    # If it's already a list
+    if isinstance(company_value, list):
+        result = []
+        for item in company_value:
+            if isinstance(item, dict):
+                # Keep ObjectId as ObjectId for Pydantic model
+                # Don't convert to string here - let Pydantic handle it
+                normalized = item.copy()
+                result.append(normalized)
+            elif hasattr(item, "model_dump"):
+                normalized = item.model_dump()
+                result.append(normalized)
+            elif isinstance(item, str):
+                # If it's a string, try to resolve it (but this shouldn't happen in new data)
+                result.append({"name": item})
+        return result
+    
+    # If it's a single value (backward compatibility), convert to list
+    # Handle dict directly to preserve ObjectId
+    if isinstance(company_value, dict):
+        # Keep ObjectId as ObjectId - don't convert to string
+        # The conversion to string happens in CustomerResponse
+        return [company_value.copy()]
+    
+    # Try normalize_company_field for other types (string, etc)
+    normalized = normalize_company_field(company_value)
+    if normalized is None:
+        return []
+    
+    if isinstance(normalized, str):
+        return [{"name": normalized}]
+    
+    if isinstance(normalized, dict):
+        # If normalize_company_field converted id to string, we need to convert back
+        # But actually, we should handle dict directly above, so this shouldn't happen
+        return [normalized]
+    
+    return []
+
+
+def normalize_company_array_field_for_response(company_value: Any) -> List[dict]:
+    """
+    Normalizes company field to be a list of dicts with string ids.
+    This version converts ObjectIds to strings for JSON serialization.
+    Use this when creating response objects.
+    
+    Args:
+        company_value: Company value (can be list, str, dict, CompanyReference, or None)
+        
+    Returns:
+        List of normalized company dicts with string ids
+    """
+    company_list = normalize_company_array_field(company_value)
+    # Convert ObjectIds to strings for JSON serialization
+    normalized_companies = []
+    for company in company_list:
+        if isinstance(company, dict):
+            normalized_company = company.copy()
+            if "id" in normalized_company:
+                # Convert ObjectId to string for JSON serialization
+                if isinstance(normalized_company["id"], (ObjectId, PyObjectId)):
+                    normalized_company["id"] = str(normalized_company["id"])
+                elif not isinstance(normalized_company["id"], str):
+                    normalized_company["id"] = str(normalized_company["id"])
+            normalized_companies.append(normalized_company)
+        else:
+            normalized_companies.append(company)
+    return normalized_companies
+
+
+def get_active_company_from_array(company_value: Any) -> Optional[dict]:
+    """
+    Gets the active company from company array.
+    Only returns company with isCompanyActive=True.
+    
+    Args:
+        company_value: Company value (can be list, str, dict, CompanyReference, or None)
+        
+    Returns:
+        Normalized company dict with string id if active company found, None otherwise
+    """
+    if company_value is None:
+        return None
+    
+    # If it's a list, find the active one
+    if isinstance(company_value, list):
+        for item in company_value:
+            if isinstance(item, dict):
+                is_active = item.get("isCompanyActive", True)  # Default to True for backward compatibility
+                if is_active:
+                    normalized = item.copy()
+                    if "id" in normalized:
+                        normalized["id"] = str(normalized["id"])
+                    return normalized
+        return None
+    
+    # If it's a single value (backward compatibility)
+    normalized = normalize_company_field(company_value)
+    if normalized is None:
+        return None
+    
+    if isinstance(normalized, dict):
+        is_active = normalized.get("isCompanyActive", True)
+        if is_active:
+            return normalized
+        return None
+    
+    if isinstance(normalized, str):
+        # If it's a string, assume it's active (backward compatibility)
+        return {"name": normalized}
+    
+    return None
+
+
 class CustomerResponse(BaseModel):
     """Customer response schema."""
     id: str
@@ -216,7 +346,7 @@ class CustomerResponse(BaseModel):
     email: Optional[str]
     phone: str
     license_type: str
-    company: Optional[Union[str, dict]] = Field(None, description="Company name (string) or Company reference (object with id as string and name)")
+    company: Optional[List[dict]] = Field(default_factory=list, description="List of company references")
     active: bool
     created_at: datetime
     updated_at: datetime
@@ -231,13 +361,17 @@ class CustomerResponse(BaseModel):
     @classmethod
     def from_customer(cls, customer: "Customer") -> "CustomerResponse":
         """Creates CustomerResponse from Customer, normalizing company field."""
+        # Return all companies (active and inactive) for historical purposes
+        # Normalize company and convert ObjectIds to strings for JSON serialization
+        normalized_companies = normalize_company_array_field_for_response(customer.company)
+        
         return cls(
             id=str(customer.id),
             name=customer.name,
             email=customer.email,
             phone=customer.phone,
             license_type=customer.license_type,
-            company=normalize_company_field(customer.company),
+            company=normalized_companies,
             active=customer.active,
             created_at=customer.created_at,
             updated_at=customer.updated_at

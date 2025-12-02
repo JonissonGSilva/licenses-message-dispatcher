@@ -157,6 +157,14 @@ create-indexes: ## Cria índices no MongoDB para melhorar performance
 	fi
 	@. $(VENV_ACTIVATE) && python scripts/create_indexes.py
 
+seed: ## Popula o banco de dados com dados de exemplo (seed)
+	@echo "$(GREEN)Populando banco de dados com dados de exemplo...$(NC)"
+	@if [ ! -d "$(VENV)" ]; then \
+		echo "$(YELLOW)Ambiente virtual não encontrado. Execute 'make setup' primeiro.$(NC)"; \
+		exit 1; \
+	fi
+	@. $(VENV_ACTIVATE) && python scripts/seed_database.py
+
 dev: setup check-env run ## Setup completo + executa o projeto (atalho)
 
 .DEFAULT_GOAL := help

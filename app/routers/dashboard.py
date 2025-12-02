@@ -47,14 +47,12 @@ async def get_dashboard_stats(
         # Get company statistics
         total_companies = await CompanyRepository.count()
         active_companies = await CompanyRepository.count({"active": True})
-        linked_companies = await CompanyRepository.count({"linked": True})
         start_companies = await CompanyRepository.count({"license_type": "Start"})
         hub_companies = await CompanyRepository.count({"license_type": "Hub"})
         
         company_stats = CompanyStats(
             total=total_companies,
             active=active_companies,
-            linked=linked_companies,
             by_license_type={
                 "Start": start_companies,
                 "Hub": hub_companies

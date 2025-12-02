@@ -23,7 +23,6 @@ class CompanyCSVService:
         "city": ["cidade", "city"],
         "state": ["estado", "state"],
         "zip_code": ["cep", "zip_code", "zipcode"],
-        "linked": ["vinculada", "linked"],
         "active": ["ativa", "active"],
         "license_timeout": ["timeout_licenca", "license_timeout", "timeout"],
         "contract_expiration": ["expiracao_contrato", "contract_expiration", "expiration"],
@@ -208,7 +207,7 @@ class CompanyCSVService:
             has_customer_required = all(col in df.columns for col in customer_required_columns)
             
             # Company-specific columns that indicate this is a company CSV
-            company_specific_columns = ["cnpj", "employee_count", "contract_expiration", "license_timeout", "portal_id", "linked", "address", "city", "state", "zip_code"]
+            company_specific_columns = ["cnpj", "employee_count", "contract_expiration", "license_timeout", "portal_id", "address", "city", "state", "zip_code"]
             has_company_columns = any(col in df.columns for col in company_specific_columns)
             
             # If it has customer required columns but no company-specific columns, it's likely a customer CSV
@@ -279,7 +278,6 @@ class CompanyCSVService:
                             logger.warning(f"Row {row_number}: {error_msg}")
                     
                     # Validates boolean fields
-                    linked = cls.validate_boolean(row.get("linked")) if pd.notna(row.get("linked")) else False
                     active = cls.validate_boolean(row.get("active")) if pd.notna(row.get("active")) else True
                     
                     # Validates integer fields
@@ -316,7 +314,6 @@ class CompanyCSVService:
                         city=str(row.get("city", "")).strip() if pd.notna(row.get("city")) else None,
                         state=str(row.get("state", "")).strip() if pd.notna(row.get("state")) else None,
                         zip_code=str(row.get("zip_code", "")).strip() if pd.notna(row.get("zip_code")) else None,
-                        linked=linked if linked is not None else False,
                         active=active if active is not None else True,
                         license_timeout=license_timeout,
                         contract_expiration=contract_expiration,

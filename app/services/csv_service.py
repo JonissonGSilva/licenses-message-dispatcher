@@ -114,7 +114,7 @@ class CSVService:
                 )
             
             # Validates that this is NOT a company CSV
-            company_specific_columns = ["cnpj", "employee_count", "contract_expiration", "license_timeout", "portal_id", "linked"]
+            company_specific_columns = ["cnpj", "employee_count", "contract_expiration", "license_timeout", "portal_id"]
             found_company_columns = [col for col in company_specific_columns if col in df.columns]
             
             if found_company_columns:
@@ -169,13 +169,13 @@ class CSVService:
                         row_errors.append(error_msg)
                         logger.warning(f"Row {row_number}: {error_msg}")
                     
-                    # Validates company if provided (must exist, be linked and active)
+                    # Validates company if provided (must exist and be active)
                     company_name = str(row.get("company", "")).strip() if pd.notna(row.get("company")) else None
                     if company_name:
-                        # Validate that company exists and is linked/active
+                        # Validate that company exists and is active
                         company_ref = await CustomerRepository.resolve_company_reference(company_name, validate_status=True)
                         if not company_ref:
-                            error_msg = f"Company '{company_name}' not found, is not linked, or is not active. Company must exist in Companies collection with linked=true and active=true"
+                            error_msg = f"Company '{company_name}' not found or is not active. Company must exist in Companies collection with active=true"
                             row_errors.append(error_msg)
                             logger.warning(f"Row {row_number}: {error_msg}")
                     

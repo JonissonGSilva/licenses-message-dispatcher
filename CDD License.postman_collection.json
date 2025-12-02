@@ -45,6 +45,44 @@
 							"response": []
 						},
 						{
+							"name": "Validate Customers CSV",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/csv/customers/validate?return_invalid_details=true",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"csv",
+										"customers",
+										"validate"
+									],
+									"query": [
+										{
+											"key": "return_invalid_details",
+											"value": "true"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Create Customer",
 							"request": {
 								"method": "POST",
@@ -242,7 +280,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8000/api/customers/?id=69209f4acd2bf3399bbd3835",
+									"raw": "http://localhost:8000/api/customers/69209f4acd2bf3399bbd3835",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -251,13 +289,7 @@
 									"path": [
 										"api",
 										"customers",
-										""
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "69209f4acd2bf3399bbd3835"
-										}
+										"69209f4acd2bf3399bbd3835"
 									]
 								}
 							},
@@ -574,12 +606,12 @@
 							"response": []
 						},
 						{
-							"name": "Get Compay By ID",
+							"name": "Get Company By ID",
 							"request": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:8000/api/companies/?id=6920a1c5cd2bf3399bbd3836",
+									"raw": "http://localhost:8000/api/companies/6920a1c5cd2bf3399bbd3836",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -588,13 +620,7 @@
 									"path": [
 										"api",
 										"companies",
-										""
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "6920a1c5cd2bf3399bbd3836"
-										}
+										"6920a1c5cd2bf3399bbd3836"
 									]
 								}
 							},
@@ -754,6 +780,60 @@
 							"response": []
 						},
 						{
+							"name": "Get Company By CNPJ",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/cnpj/12345678000190",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"cnpj",
+										"12345678000190"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Company History",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/companies/{{company_id}}/history?skip=0&limit=10",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"companies",
+										"{{company_id}}",
+										"history"
+									],
+									"query": [
+										{
+											"key": "skip",
+											"value": "0"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Sync Companies By CSV",
 							"request": {
 								"method": "POST",
@@ -780,6 +860,44 @@
 										"csv",
 										"companies",
 										"upload"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Validate Companies CSV",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "file",
+											"type": "file",
+											"src": ""
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:8000/api/csv/companies/validate?return_invalid_details=true",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"csv",
+										"companies",
+										"validate"
+									],
+									"query": [
+										{
+											"key": "return_invalid_details",
+											"value": "true"
+										}
 									]
 								}
 							},
@@ -1159,6 +1277,772 @@
 								}
 							},
 							"response": []
+						}
+					]
+				},
+				{
+					"name": "Dashboard",
+					"item": [
+						{
+							"name": "Get Dashboard Stats",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/dashboard/stats",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"dashboard",
+										"stats"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Dashboard Stats With Date Range",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/dashboard/stats?start_date=2024-01-01&end_date=2024-12-31",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"dashboard",
+										"stats"
+									],
+									"query": [
+										{
+											"key": "start_date",
+											"value": "2024-01-01"
+										},
+										{
+											"key": "end_date",
+											"value": "2024-12-31"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Dashboard Summary",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/dashboard/summary",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"dashboard",
+										"summary"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Users By Company",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/dashboard/users-by-company?limit=10",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"dashboard",
+										"users-by-company"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Messages By Date",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/dashboard/messages-by-date?days=30",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"dashboard",
+										"messages-by-date"
+									],
+									"query": [
+										{
+											"key": "days",
+											"value": "30"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Messages By Date Range",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8000/api/dashboard/messages-by-date?start_date=2024-01-01&end_date=2024-12-31",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"api",
+										"dashboard",
+										"messages-by-date"
+									],
+									"query": [
+										{
+											"key": "start_date",
+											"value": "2024-01-01"
+										},
+										{
+											"key": "end_date",
+											"value": "2024-12-31"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Equipes",
+					"item": [
+						{
+							"name": "Direta",
+							"item": [
+								{
+									"name": "Create Direta",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"nome\": \"João Direta\",\n    \"cpf\": \"12345678900\",\n    \"telefone\": \"5511999999999\",\n    \"email\": \"joao@example.com\",\n    \"tipo\": \"Direta\",\n    \"funcao\": \"Vendedor\",\n    \"remuneracao\": 5000.0,\n    \"comissao\": 10.0\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/direta",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"direta"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List Direta",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/direta?skip=0&limit=10",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"direta"
+											],
+											"query": [
+												{
+													"key": "skip",
+													"value": "0"
+												},
+												{
+													"key": "limit",
+													"value": "10"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Direta By ID",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/direta/{{direta_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"direta",
+												"{{direta_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Direta",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"nome\": \"João Direta Atualizado\",\n    \"remuneracao\": 6000.0\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/direta/{{direta_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"direta",
+												"{{direta_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Direta",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/direta/{{direta_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"direta",
+												"{{direta_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Indicador",
+							"item": [
+								{
+									"name": "Create Indicador",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"nome\": \"Maria Indicador\",\n    \"empresa\": \"Empresa ABC\",\n    \"telefone\": \"5511888888888\",\n    \"email\": \"maria@example.com\",\n    \"comissao\": 15.0\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/indicador",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"indicador"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List Indicador",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/indicador?skip=0&limit=10",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"indicador"
+											],
+											"query": [
+												{
+													"key": "skip",
+													"value": "0"
+												},
+												{
+													"key": "limit",
+													"value": "10"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Indicador By ID",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/indicador/{{indicador_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"indicador",
+												"{{indicador_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Indicador",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"comissao\": 20.0\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/indicador/{{indicador_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"indicador",
+												"{{indicador_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Indicador",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/indicador/{{indicador_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"indicador",
+												"{{indicador_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Parceiro",
+							"item": [
+								{
+									"name": "Create Parceiro",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"nome\": \"Pedro Parceiro\",\n    \"empresa\": \"Empresa XYZ\",\n    \"tipo\": \"Parceiro\",\n    \"telefone\": \"5511777777777\",\n    \"email\": \"pedro@example.com\",\n    \"comissao\": 12.0\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List Parceiro",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro?skip=0&limit=10",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro"
+											],
+											"query": [
+												{
+													"key": "skip",
+													"value": "0"
+												},
+												{
+													"key": "limit",
+													"value": "10"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Parceiro By ID",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro/{{parceiro_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro",
+												"{{parceiro_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Parceiro",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"comissao\": 15.0\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro/{{parceiro_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro",
+												"{{parceiro_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Parceiro",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro/{{parceiro_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro",
+												"{{parceiro_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Negocio for Parceiro",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"empresa_terceira\": \"Empresa Terceira ABC\",\n    \"tipo\": \"Start\",\n    \"qtd_licencas\": 10,\n    \"valor_negociacao\": 50000.0,\n    \"tempo_contrato\": 12,\n    \"data_inicio\": \"2024-01-01\",\n    \"data_pagamento\": \"2024-01-15\"\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro/{{parceiro_id}}/negocio",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro",
+												"{{parceiro_id}}",
+												"negocio"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "List Negocios for Parceiro",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/parceiro/{{parceiro_id}}/negocio",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"parceiro",
+												"{{parceiro_id}}",
+												"negocio"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Negocio",
+							"item": [
+								{
+									"name": "Get Negocio By ID",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/negocio/{{negocio_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"negocio",
+												"{{negocio_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Update Negocio",
+									"request": {
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"valor_negociacao\": 60000.0,\n    \"qtd_licencas\": 15\n  }",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/negocio/{{negocio_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"negocio",
+												"{{negocio_id}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Negocio",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:8000/api/equipes/negocio/{{negocio_id}}",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"api",
+												"equipes",
+												"negocio",
+												"{{negocio_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
 						}
 					]
 				},

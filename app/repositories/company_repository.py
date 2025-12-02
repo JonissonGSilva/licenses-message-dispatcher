@@ -196,7 +196,6 @@ class CompanyRepository:
     @staticmethod
     async def list_by_filter(
         active: Optional[bool] = None,
-        linked: Optional[bool] = None,
         license_type: Optional[str] = None,
         skip: int = 0,
         limit: int = 100
@@ -207,8 +206,6 @@ class CompanyRepository:
         filter_dict = {}
         if active is not None:
             filter_dict["active"] = active
-        if linked is not None:
-            filter_dict["linked"] = linked
         if license_type:
             filter_dict["license_type"] = license_type
         

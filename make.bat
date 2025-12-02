@@ -20,6 +20,7 @@ if "%1"=="clean" goto clean
 if "%1"=="check-env" goto check-env
 if "%1"=="verify-env" goto verify-env
 if "%1"=="create-indexes" goto create-indexes
+if "%1"=="seed" goto seed
 goto help
 
 :help
@@ -34,6 +35,7 @@ echo   clean      - Limpa arquivos temporarios
 echo   check-env      - Verifica se o arquivo .env esta configurado
 echo   verify-env     - Verifica configuracoes do .env (requer Python)
 echo   create-indexes - Cria indices no MongoDB para melhorar performance
+echo   seed           - Popula o banco de dados com dados de exemplo
 echo   help           - Mostra esta mensagem
 echo.
 goto end
@@ -138,6 +140,16 @@ if not exist "%VENV%" (
 )
 call %VENV_ACTIVATE%
 python scripts\create_indexes.py
+goto end
+
+:seed
+echo Populando banco de dados com dados de exemplo...
+if not exist "%VENV%" (
+    echo Ambiente virtual nao encontrado. Execute 'make.bat setup' primeiro.
+    exit /b 1
+)
+call %VENV_ACTIVATE%
+python scripts\seed_database.py
 goto end
 
 :end

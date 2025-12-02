@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from app.repositories.company_repository import CompanyRepository
 from app.repositories.customer_repository import CustomerRepository
 from app.repositories.company_history_repository import CompanyHistoryRepository
+from app.repositories.team_repository import IndicadorRepository, ParceiroRepository
 from app.models.company import CompanyResponse, CompanyCreate, CompanyUpdate, CompanyPaginatedResponse
 from app.models.company_history import CompanyHistoryCreate, CompanyHistoryResponse
 from app.models.customer import CustomerResponse
@@ -44,7 +45,6 @@ async def create_company(company: CompanyCreate):
             city=company_created.city,
             state=company_created.state,
             zip_code=company_created.zip_code,
-            linked=company_created.linked,
             active=company_created.active,
             status=company_created.status,
             contract_expiration=company_created.contract_expiration,
@@ -67,7 +67,6 @@ async def list_companies(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     active: Optional[bool] = Query(None, description="Filter by active status"),
-    linked: Optional[bool] = Query(None, description="Filter by linked status"),
     license_type: Optional[str] = Query(None, pattern="^(Start|Hub)$", description="Filter by license type")
 ):
     """Lists companies with optional filters and pagination."""
@@ -76,15 +75,12 @@ async def list_companies(
         filter_dict = {}
         if active is not None:
             filter_dict["active"] = active
-        if linked is not None:
-            filter_dict["linked"] = linked
         if license_type:
             filter_dict["license_type"] = license_type
         
         # Get companies and total count
         companies = await CompanyRepository.list_by_filter(
             active=active,
-            linked=linked,
             license_type=license_type,
             skip=skip,
             limit=limit
@@ -105,7 +101,6 @@ async def list_companies(
                     city=c.city,
                     state=c.state,
                     zip_code=c.zip_code,
-                    linked=c.linked,
                     active=c.active,
                     status=c.status,
                     contract_expiration=c.contract_expiration,
@@ -147,7 +142,6 @@ async def get_company(company_id: str):
             city=company.city,
             state=company.state,
             zip_code=company.zip_code,
-            linked=company.linked,
             active=company.active,
             status=company.status,
             contract_expiration=company.contract_expiration,
@@ -216,31 +210,58 @@ async def update_company(company_id: str, company_update: CompanyUpdate):
                 await CustomerRepository.update_company_name(company.id, company.name)
         
         # Check if license type was updated
-        # If license_type changed, update it in all related customers
+        # If license_type changed, update it in all related customers, indicadores, and parceiros
         if "license_type" in company_update.model_dump(exclude_unset=True):
             if current_company.license_type != company.license_type and company.license_type:
-                logger.info(f"Company license type changed from '{current_company.license_type}' to '{company.license_type}', updating customers")
+                logger.info(f"Company license type changed from '{current_company.license_type}' to '{company.license_type}', updating customers, indicadores, and parceiros")
                 await CustomerRepository.update_license_type_by_company(company.id, company.license_type)
+                await IndicadorRepository.update_license_type_by_company(company.id, company.license_type)
+                await ParceiroRepository.update_license_type_by_company(company.id, company.license_type)
         
-        # Check if company was deactivated or unlinked
-        # If active or linked changed to False, add contract record and set isActive
+        # Check if company status or active field was updated
+        # Update isCompanyActive in all related customers when status or active changes
+        status_changed = False
         active_changed = False
-        linked_changed = False
         
+        # Check status change
+        if "status" in company_update.model_dump(exclude_unset=True):
+            if current_company.status != company.status:
+                status_changed = True
+        
+        # Check active change
         if "active" in company_update.model_dump(exclude_unset=True):
             if current_company.active != company.active:
                 active_changed = True
                 if not company.active:
                     logger.info(f"Company {company_id} was deactivated")
         
-        if "linked" in company_update.model_dump(exclude_unset=True):
-            if current_company.linked != company.linked:
-                linked_changed = True
-                if not company.linked:
-                    logger.info(f"Company {company_id} was unlinked")
+        # Update isCompanyActive if status or active changed
+        # Company is active only if status is "ativo" and active is True
+        if status_changed or active_changed:
+            is_company_active = (
+                company.status == "ativo" and 
+                company.active is True
+            )
+            logger.info(
+                f"Company status/active changed (status: {current_company.status} -> {company.status}, "
+                f"active: {current_company.active} -> {company.active}), "
+                f"updating isCompanyActive to {is_company_active} in customers, indicadores and parceiros"
+            )
+            # Update customers
+            customers_updated = await CustomerRepository.update_company_active_status(company.id, is_company_active)
+            # Update indicadores
+            indicadores_updated = await IndicadorRepository.update_company_active_status(company.id, is_company_active)
+            # Update parceiros
+            parceiros_updated = await ParceiroRepository.update_company_active_status(company.id, is_company_active)
+            logger.info(
+                f"Updated isCompanyActive: {customers_updated} customers, "
+                f"{indicadores_updated} indicadores, {parceiros_updated} parceiros"
+            )
         
-        # If company was deactivated or unlinked, add contract record
-        if (active_changed and not company.active) or (linked_changed and not company.linked):
+        # Check if company was deactivated for contract record
+        
+        # If company was deactivated, add contract record
+        if active_changed and not company.active:
             # Set isActive to false
             await CompanyRepository.set_is_active(company_id, False)
             
@@ -283,7 +304,6 @@ async def update_company(company_id: str, company_update: CompanyUpdate):
             city=company.city,
             state=company.state,
             zip_code=company.zip_code,
-            linked=company.linked,
             active=company.active,
             status=company.status,
             contract_expiration=company.contract_expiration,
